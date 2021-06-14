@@ -19,10 +19,10 @@
   Modified 2012 by Todd Krein (todd@krein.org) to implement repeated starts
   Modified 2017 by Chuck Todd (ctodd@cableone.net) to correct Unconfigured Slave Mode reboot
   Modified 2019-2021 by Spence Konde for megaTinyCore and DxCore.
-	This version is part of megaTinyCore and DxCore; it is not expected
-	to work with other hardware or cores without modifications.
+  This version is part of megaTinyCore and DxCore; it is not expected
+  to work with other hardware or cores without modifications.
   Modified 2021 by MX682X for megaTinyCore and DxCore. 
-	Added Support for Simultanious master/slave, dual mode and Wire1.
+  Added Support for Simultanious master/slave, dual mode and Wire1.
 */
 
 extern "C" {
@@ -52,8 +52,8 @@ extern "C" {
       
 TwoWire::TwoWire(TWI_t *twi_module) {  
    vars._module = twi_module;
-   vars.user_onRequest = NULL;	//Make sure to initialize this pointers
-   vars.user_onReceive = NULL;	//This avoids weird jumps should something unexpected happen
+   vars.user_onRequest = NULL;  //Make sure to initialize this pointers
+   vars.user_onReceive = NULL;  //This avoids weird jumps should something unexpected happen
 }
 
 // Public Methods //////////////////////////////////////////////////////////////
@@ -92,7 +92,7 @@ bool TwoWire::swapModule(TWI_t *twi_module) {
       #endif
    #else
         badCall("Only one TWI module available, nothing to switch with");
-		(void)twi_module; //Remove warning unused variable
+    (void)twi_module; //Remove warning unused variable
    #endif
    return false;
 }
@@ -122,18 +122,18 @@ void TwoWire::begin(uint8_t address, bool receive_broadcast, uint8_t second_addr
 
 
 void TwoWire::setClock(uint32_t clock) {
-	TWI_MasterSetBaud(&vars, clock);
+  TWI_MasterSetBaud(&vars, clock);
 }
 
 
 void TwoWire::end(void) {
-	TWI_Disable(&vars);
+  TWI_Disable(&vars);
 }
 void TwoWire::endMaster(void) {
-	TWI_DisableMaster(&vars);
+  TWI_DisableMaster(&vars);
 }
 void TwoWire::endSlave(void) {
-	TWI_DisableSlave(&vars);
+  TWI_DisableSlave(&vars);
 }
 
 
@@ -144,20 +144,20 @@ uint8_t TwoWire::requestFrom(int     address, int     quantity, int     sendStop
 uint8_t TwoWire::requestFrom(int     address, int     quantity)                       {return requestFrom((uint8_t)address, (uint8_t)quantity, (uint8_t)1);}
 
 uint8_t TwoWire::requestFrom(uint8_t address, uint8_t quantity, uint8_t sendStop) {
-	if (quantity > BUFFER_LENGTH) {
-		quantity = BUFFER_LENGTH;
-	}
-	
-	setSlaveAddress(address);
+  if (quantity > BUFFER_LENGTH) {
+    quantity = BUFFER_LENGTH;
+  }
+  
+  setSlaveAddress(address);
 
-	return TWI_MasterRead(&vars, quantity, sendStop);
+  return TWI_MasterRead(&vars, quantity, sendStop);
 }
 
 
 void TwoWire::beginTransmission(uint8_t address) {
   // set address of targeted slave
   setSlaveAddress(address);
-  vars._txTail = vars._txHead;	//reset transmitBuffer 
+  vars._txTail = vars._txHead;  //reset transmitBuffer 
 }
 
 
@@ -185,7 +185,19 @@ uint8_t TwoWire::endTransmission(bool sendStop) {
 // slave tx event callback
 // or after beginTransmission(address)
 size_t TwoWire::write(uint8_t data) {
+#if defined (TWI_MANDS)
+  if (vars._bools._toggleStreamFn == 0x01) {
+    uint8_t nextHead = TWI_advancePosition(vars._txHeadS);
+  
+    if (nextHead == vars._txTailS) return 0;        //Buffer full, stop accepting data
 
+    vars._txBufferS[vars._txHeadS] = data;      //Load data into the buffer
+    vars._txHeadS = nextHead;                       //advancing the head
+
+    return 1;
+  }
+#endif
+    
   /* Put byte in txBuffer */
   uint8_t nextHead = TWI_advancePosition(vars._txHead);
   
@@ -211,31 +223,44 @@ size_t TwoWire::write(const uint8_t *data, size_t quantity) {
 }
 
 
-// must be called in:
-// slave rx event callback
-// or after requestFrom(address, numBytes)
+
+/**
+ *@brief      available returns the amount of bytes that are available to read in the master or slave buffer
+ *
+ *
+ *@return     uint8_t
+ *@retval     amount of bytes available to read from the master buffer
+ */
 int TwoWire::available(void) {
-   return TWI_Available(&vars);   
+  return TWI_Available(&vars);
 }
+
 
 
 // must be called in:
 // slave rx event callback
 // or after requestFrom(address, numBytes)
 int TwoWire::read(void) {
-   // if the head isn't ahead of the tail, we don't have any characters
-   if (vars._rxHead == vars._rxTail) 
-   {
-         return -1;
-   } 
-   else 
-   {
-      unsigned char c = vars._rxBuffer[vars._rxTail];
-      //vars._rxTail++;
-      //if (vars._rxTail > (BUFFER_LENGTH-1)) vars._rxTail = 0;  //round-robin-ing
-	  vars._rxTail = TWI_advancePosition(vars._rxTail);
+#if defined (TWI_MANDS)
+  if (vars._bools._toggleStreamFn == 0x01) {  
+    if (vars._rxHeadS == vars._rxTailS) {
+      return -1;
+    }
+    else {
+      uint8_t c = vars._rxBufferS[vars._rxTailS];
+      vars._rxTailS = TWI_advancePosition(vars._rxTailS);
       return c;
-   }
+    }
+  }
+#endif
+  if (vars._rxHead == vars._rxTail) { // if the head isn't ahead of the tail, we don't have any characters
+    return -1;
+  } 
+  else {
+    uint8_t c = vars._rxBuffer[vars._rxTail];
+    vars._rxTail = TWI_advancePosition(vars._rxTail);
+    return c;
+  }
 }
 
 
@@ -243,6 +268,12 @@ int TwoWire::read(void) {
 // slave rx event callback
 // or after requestFrom(address, numBytes)
 int TwoWire::peek(void) {
+#if defined (TWI_MANDS)
+  if (vars._bools._toggleStreamFn == 0x01) {  
+    if (vars._rxHeadS == vars._rxTailS) {return -1;}
+    else                                {return vars._rxBufferS[vars._rxTailS];}
+  }
+#endif
   if (vars._rxHead == vars._rxTail) {return -1;} 
   else                              {return vars._rxBuffer[vars._rxTail];}
 }
@@ -251,97 +282,30 @@ int TwoWire::peek(void) {
 // can be used to get out of an error state in TWI module
 // e.g. when MDATA register is written before MADDR
 void TwoWire::flush(void) {
-   vars._rxHead = vars._rxTail;
-   vars._txHead = vars._txHead;
+  vars._rxTail = vars._rxHead;
+  vars._txHead = vars._txHead;
+  #if defined (TWI_MANDS)
+    vars._rxTailS = vars._rxHeadS;
+    vars._txHeadS = vars._txHeadS;                               
+  #endif
   
-    /* Turn off and on TWI module */
-    TWI_Flush(&vars);
+  /* Turn off and on TWI module */
+  TWI_Flush(&vars);
 }
 
-uint8_t TwoWire::getIncomingAddress(void)
-{
-	return vars._incomingAddress;
+uint8_t TwoWire::getIncomingAddress(void) {
+  return vars._incomingAddress;
 }
 
 
 #if defined (TWI_DUALCTRL)
 void TwoWire::enableDualMode(bool fmp_enable) {
-	vars._module->DUALCTRL = ((fmp_enable << TWI_FMPEN_bp) | TWI_ENABLE_bm);
+  vars._module->DUALCTRL = ((fmp_enable << TWI_FMPEN_bp) | TWI_ENABLE_bm);
 }
 #endif
 
-size_t TwoWire::writeSlave(uint8_t data) {
-#if defined (TWI_MANDS)
-	/* Put byte in txBuffer */
-	uint8_t nextHead = TWI_advancePosition(vars._txHeadS);
-	
-	if (nextHead == vars._txTailS) return 0;        //Buffer full, stop accepting data
-
-	vars._txBufferS[vars._txHeadS] = data;			//Load data into the buffer
-	vars._txHeadS = nextHead;                       //advancing the head
-
-	return 1;
-#else
-	return write(data);
-#endif
-}
 
 
-size_t TwoWire::writeSlave(const uint8_t *data, size_t quantity) {
-#if defined (TWI_MANDS)
-	for (size_t i = 0; i < quantity; i++) {
-		writeSlave(*(data + i));
-	}
-
-	return quantity;
-#else
-	return write(data, quantity);
-#endif
-}
-
-
-int TwoWire::availableSlave(void) {
-#if defined (TWI_MANDS)
-	return TWI_AvailableSlave(&vars);
-#else
-	return available();
-#endif
-}
-
-
-
-int TwoWire::readSlave(void) {
-#if defined (TWI_MANDS)
-	// if the head isn't ahead of the tail, we don't have any characters
-	if (vars._rxHeadS == vars._rxTailS) {
-		return -1;
-	}
-	else {
-		unsigned char c = vars._rxBufferS[vars._rxTailS];
-		vars._rxTailS = TWI_advancePosition(vars._rxTailS);
-		return c;
-	}
-#else
-	return read();
-#endif
-}
-
-
-int TwoWire::peekSlave(void) {
-#if defined (TWI_MANDS)
-	if (vars._rxHeadS == vars._rxTailS) {return -1;}
-	else                                {return vars._rxBufferS[vars._rxTailS];}
-#else
-	return peek();
-#endif
-}
-
-void TwoWire::flushSlave(void) {
-	#if defined (TWI_MANDS)
-		vars._rxHeadS = vars._rxTailS;
-		vars._txHeadS = vars._txHeadS;                               
-	#endif
-}
 
 
 
@@ -377,7 +341,7 @@ void TwoWire::onReceive(void (*function)(int)) {
 
 // sets function called on slave read
 void TwoWire::onRequest(void (*function)(void)) {
-	vars.user_onRequest = function;
+  vars.user_onRequest = function;
 }
 
 
@@ -391,7 +355,7 @@ void TwoWire::setSlaveAddress(uint8_t slave_address){
 #endif
 
 #if defined (TWI1)
-#if defined (USING_TWI1)
+#if defined (USING_WIRE1)
    TwoWire Wire1(&TWI1);
 #endif
 #endif

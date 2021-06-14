@@ -43,13 +43,13 @@ void loop() {
 
 void rxFunction(int numBytes)
 {
-   uint8_t j = Wire.availableSlave();
+   uint8_t j = Wire.available();
    if (Wire.getIncomingAddress() == (0x10 << 1))    //Data from Wire0
    {
       uint8_t i = 0;
       for ( ; i < j; i++)
       {
-         wire0_data[i] = Wire.readSlave();
+         wire0_data[i] = Wire.read();
       }
       wire0_len = i;
    }
@@ -59,7 +59,7 @@ void rxFunction(int numBytes)
       uint8_t i = 0;
       for ( ; i < j; i++)
       {
-         wire1_data[i] = Wire.readSlave();
+         wire1_data[i] = Wire.read();
       }
       wire1_len = i;
    }

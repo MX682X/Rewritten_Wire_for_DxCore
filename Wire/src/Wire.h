@@ -19,7 +19,7 @@
   Modified 2012 by Todd Krein (todd@krein.org) to implement repeated starts
 
   Modified 2021 by MX682X for megaTinyCore and DxCore. 
-	Added Support for Simultanious master/slave, dual mode and Wire1.
+  Added Support for Simultanious master/slave, dual mode and Wire1.
 */
 
 
@@ -55,9 +55,9 @@ extern "C" {
 
 class TwoWire: public Stream {
   private:
-   twiData vars;                 //variables that are passed to the twi.c functions
+    twiData vars;                 //variables that are passed to the twi.c functions
   
-   void setSlaveAddress(uint8_t slave_address);
+    void setSlaveAddress(uint8_t slave_address);
    
   public:
     TwoWire(TWI_t *twi_module);
@@ -76,8 +76,8 @@ class TwoWire: public Stream {
     void begin(int     address)                                                  {begin((uint8_t)address, 0, 0);}
     
     void end();
-	void endMaster(void);
-	void endSlave(void);
+    void endMaster(void);
+    void endSlave(void);
     
     void beginTransmission(uint8_t address);
     void beginTransmission(int     address)     {beginTransmission((uint8_t)address);}
@@ -97,9 +97,9 @@ class TwoWire: public Stream {
     virtual int read(void);
     virtual int peek(void);
     virtual void flush(void);
-	
-	uint8_t getIncomingAddress(void);
-	
+  
+    uint8_t getIncomingAddress(void);
+  
     void onReceive(void (*)(int)); 
     void onRequest(void (*)(void));
 
@@ -108,21 +108,15 @@ class TwoWire: public Stream {
     inline size_t write(unsigned int n)   {return write((uint8_t)n);}
     inline size_t write(int n)            {return write((uint8_t)n);}
 
-	//Functions for simultaneous master and slave operation
-	void   enableDualMode(bool fmp_enable);			//Moves the Slave to other pins
-	size_t writeSlave(uint8_t);
-	size_t writeSlave(const uint8_t *, size_t);
-	int    availableSlave(void);
-	int    readSlave(void);
-	int    peekSlave(void);
-	void   flushSlave(void);
+  //Functions for simultaneous master and slave operation
+    void   enableDualMode(bool fmp_enable);      //Moves the Slave to other pins
     
     using Print::write;  
 
     void    TWI_onReceiveService(int numBytes);
     uint8_t TWI_onRequestService(void);
-	
-    static void onSlaveIRQ(TWI_t *module);		//is called by the TWI interrupt routines
+  
+    static void onSlaveIRQ(TWI_t *module);    //is called by the TWI interrupt routines
 };
 
 #if defined(TWI0)
@@ -130,9 +124,9 @@ class TwoWire: public Stream {
 #endif
 
 #if defined (TWI1)
-#if defined (USING_TWI1)
-   extern TwoWire Wire1;
-#endif
+  #if defined (USING_WIRE1)
+    extern TwoWire Wire1;
+  #endif
 #endif
 
 

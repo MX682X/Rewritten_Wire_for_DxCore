@@ -24,7 +24,6 @@ void setup() {
    PORTF.PIN3CTRL |= PORT_PULLUPEN_bm;
 	  
    Wire.enableDualMode(false);
-   
    Wire.begin();
    Wire.begin(0x40);
    
@@ -53,7 +52,6 @@ void loop() {
 		 }
 	  }
       Wire.beginTransmission(0x10);
-	  //Wire.beginTransmission(0x6B);
       Wire.write(wire0_data, wire0_len);
       Wire.endTransmission(1);
 	  
@@ -87,7 +85,7 @@ void rxFunction(int numBytes)
    Serial1.print(":");
    for ( ; i < numBytes; i++)
    {
-      Serial1.write(Wire.readSlave());
+      Serial1.write(Wire.read());
    }
    Serial1.println();
 }
@@ -95,16 +93,15 @@ void rxFunction(int numBytes)
 
 void rxFunction1(int numBytes)
 {
-   uint8_t i;
+   uint8_t i = 0;
    Serial1.print("WS1RX ");
    Serial1.print(Wire1.getIncomingAddress());
    Serial1.print(":");
    for ( ; i < numBytes; i++)
    {
-      wire1_data[i] = Wire1.readSlave();
+      wire1_data[i] = Wire1.read();
       Serial1.write(wire1_data[i]);
    }
    wire1_len = i;
    Serial1.println();
 }
-
