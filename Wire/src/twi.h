@@ -85,7 +85,8 @@ struct twiData {
     uint8_t _txHeadS;                    
     uint8_t _txTailS;                    
     uint8_t _rxHeadS;
-    uint8_t _rxTailS;
+    uint8_t _rxTailS;       //I have an idea how to fix this - at the beginning of each function local pointer variables are created, pointing to the master or slave variables,
+                            //but this has to be done later.
   #else                    //I was not able to find a nice way to make an Variable alias
     #define _incomingAddress _slaveAddress
     #define _txHeadS      _txHead
@@ -131,7 +132,7 @@ uint8_t  TWI_MasterRead(struct twiData *_data, uint8_t bytesToRead, bool send_st
 void     TWI_RegisterSlaveISRcallback(void (*function)(TWI_t *module));
 
 
-void     TWI_SlaveInterruptHandler(TWI_t *module);
+
 void     TWI_HandleSlaveIRQ(struct twiData *_data);
 
 
