@@ -36,9 +36,9 @@ SOFTWARE.
   #define ADD_WRITE_BIT(address)   (address & ~0x01)
 #endif
 
-//#define USING_WIRE1    //On devices with two TWIs, this identifies if the user wants to use Wire1
-//#define TWI_DUALCTRL   //This identifies if the device supports dual mode, where slave pins are different from the master pins
-//#define TWI_MANDS      //This enables the simultaneous use of the Master and Slave functionality - where supported
+#define USING_WIRE1    //On devices with two TWIs, this identifies if the user wants to use Wire1
+#define TWI_DUALCTRL   //This identifies if the device supports dual mode, where slave pins are different from the master pins
+#define TWI_MANDS      //This enables the simultaneous use of the Master and Slave functionality - where supported
 
 #ifndef BUFFER_LENGTH
   #if (RAMSIZE < 256)          /* Parts with 128b of RAM wince at pair of 16k buffers         */
@@ -85,14 +85,7 @@ struct twiData {
     uint8_t _txHeadS;                    
     uint8_t _txTailS;                    
     uint8_t _rxHeadS;
-    uint8_t _rxTailS;       //I have an idea how to fix this - at the beginning of each function local pointer variables are created, pointing to the master or slave variables,
-                            //but this has to be done later.
-  #else                    //I was not able to find a nice way to make an Variable alias
-    #define _incomingAddress _slaveAddress
-    #define _txHeadS      _txHead
-    #define _txTailS      _txTail
-    #define _rxHeadS      _rxHead
-    #define _rxTailS      _rxTail
+    uint8_t _rxTailS;
   #endif
    
   struct twiDataBools _bools;      //a structure to hold some bools
@@ -106,9 +99,6 @@ struct twiData {
   #if defined (TWI_MANDS)        //Putting the arrays in the end because the first 32 bytes can
     uint8_t _txBufferS[BUFFER_LENGTH];  //be accessed easier and faster
     uint8_t _rxBufferS[BUFFER_LENGTH];
-  #else
-    #define _txBufferS _txBuffer
-    #define _rxBufferS _rxBuffer
   #endif
 };
 
@@ -130,9 +120,6 @@ uint8_t  TWI_MasterWrite(struct twiData *_data, bool send_stop);
 uint8_t  TWI_MasterRead(struct twiData *_data, uint8_t bytesToRead, bool send_stop);
 
 void     TWI_RegisterSlaveISRcallback(void (*function)(TWI_t *module));
-
-
-
 void     TWI_HandleSlaveIRQ(struct twiData *_data);
 
 

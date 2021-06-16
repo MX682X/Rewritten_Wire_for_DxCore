@@ -185,26 +185,36 @@ uint8_t TwoWire::endTransmission(bool sendStop) {
 // slave tx event callback
 // or after beginTransmission(address)
 size_t TwoWire::write(uint8_t data) {
-#if defined (TWI_MANDS)
-  if (vars._bools._toggleStreamFn == 0x01) {
-    uint8_t nextHead = TWI_advancePosition(vars._txHeadS);
   
-    if (nextHead == vars._txTailS) return 0;        //Buffer full, stop accepting data
-
-    vars._txBufferS[vars._txHeadS] = data;      //Load data into the buffer
-    vars._txHeadS = nextHead;                       //advancing the head
-
-    return 1;
+  uint8_t nextHead;
+  uint8_t* txHead;
+  uint8_t* txTail;
+  uint8_t* txBuffer;
+   
+#if defined (TWI_MANDS)                         //Alias handler
+  if (vars._bools._toggleStreamFn == 0x01) {  
+    txHead  = &(vars._txHeadS);
+    txTail  = &(vars._txTailS);
+    txBuffer = vars._txBufferS;
   }
+  else {
+    txHead  = &(vars._txHead);
+    txTail  = &(vars._txTail); 
+    txBuffer = vars._txBuffer;
+  }
+#else
+    txHead  = &(vars._txHead);
+    txTail  = &(vars._txTail); 
+    txBuffer = vars._txBuffer;
 #endif
     
   /* Put byte in txBuffer */
-  uint8_t nextHead = TWI_advancePosition(vars._txHead);
+  nextHead = TWI_advancePosition(*txHead);
   
-  if (nextHead == vars._txTail) return 0;          //Buffer full, stop accepting data
+  if (nextHead == (*txTail)) return 0;          //Buffer full, stop accepting data
 
-  vars._txBuffer[vars._txHead] = data;             //Load data into the buffer
-  vars._txHead = nextHead;                         //advancing the head
+  txBuffer[(*txHead)] = data;             //Load data into the buffer
+  (*txHead) = nextHead;                   //advancing the head
 
   return 1;
 }
@@ -241,24 +251,35 @@ int TwoWire::available(void) {
 // slave rx event callback
 // or after requestFrom(address, numBytes)
 int TwoWire::read(void) {
-#if defined (TWI_MANDS)
+  
+  uint8_t* rxHead;
+  uint8_t* rxTail;
+  uint8_t* rxBuffer;
+  
+#if defined (TWI_MANDS)                         //Alias handler
   if (vars._bools._toggleStreamFn == 0x01) {  
-    if (vars._rxHeadS == vars._rxTailS) {
-      return -1;
-    }
-    else {
-      uint8_t c = vars._rxBufferS[vars._rxTailS];
-      vars._rxTailS = TWI_advancePosition(vars._rxTailS);
-      return c;
-    }
+    rxHead  = &(vars._rxHeadS);
+    rxTail  = &(vars._rxTailS);
+    rxBuffer = vars._rxBufferS;
   }
-#endif
-  if (vars._rxHead == vars._rxTail) { // if the head isn't ahead of the tail, we don't have any characters
+  else {
+    rxHead  = &(vars._rxHead);
+    rxTail  = &(vars._rxTail); 
+    rxBuffer = vars._rxBuffer;
+  }
+#else
+    rxHead  = &(vars._rxHead);
+    rxTail  = &(vars._rxTail); 
+    rxBuffer = vars._rxBuffer;
+#endif 
+  
+  
+  if ((*rxHead) == (*rxTail)) { // if the head isn't ahead of the tail, we don't have any characters
     return -1;
   } 
   else {
-    uint8_t c = vars._rxBuffer[vars._rxTail];
-    vars._rxTail = TWI_advancePosition(vars._rxTail);
+    uint8_t c = rxBuffer[(*rxTail)];
+    (*rxTail) = TWI_advancePosition(*rxTail);
     return c;
   }
 }
@@ -268,14 +289,30 @@ int TwoWire::read(void) {
 // slave rx event callback
 // or after requestFrom(address, numBytes)
 int TwoWire::peek(void) {
-#if defined (TWI_MANDS)
+  
+  uint8_t* rxHead;
+  uint8_t* rxTail;
+  uint8_t* rxBuffer;
+  
+#if defined (TWI_MANDS)                         //Alias handler
   if (vars._bools._toggleStreamFn == 0x01) {  
-    if (vars._rxHeadS == vars._rxTailS) {return -1;}
-    else                                {return vars._rxBufferS[vars._rxTailS];}
+    rxHead  = &(vars._rxHeadS);
+    rxTail  = &(vars._rxTailS);
+    rxBuffer = vars._rxBufferS;
   }
-#endif
-  if (vars._rxHead == vars._rxTail) {return -1;} 
-  else                              {return vars._rxBuffer[vars._rxTail];}
+  else {
+    rxHead  = &(vars._rxHead);
+    rxTail  = &(vars._rxTail); 
+    rxBuffer = vars._rxBuffer;
+  }
+#else
+    rxHead  = &(vars._rxHead);
+    rxTail  = &(vars._rxTail); 
+    rxBuffer = vars._rxBuffer;
+#endif 
+
+  if ((*rxHead) == (*rxTail)) {return -1;} 
+  else                        {return rxBuffer[(*rxTail)];}
 }
 
 

@@ -252,30 +252,34 @@ void TWI_MasterSetBaud(struct twiData *_data, uint32_t frequency) {
  *@return     uint8_t
  *@retval     amount of bytes available to read from the master or slave buffer
  */
-uint8_t TWI_Available(struct twiData *_data) {
-  uint16_t num; 
-#if defined (TWI_MANDS)
+uint8_t TWI_Available(struct twiData *_data) { 
+  uint16_t num;   
+  uint8_t* rxHead;
+  uint8_t* rxTail;  
+  
+#if defined (TWI_MANDS)                         //Alias handler
   if (_data->_bools._toggleStreamFn == 0x01) {  
-  
-    num = (BUFFER_LENGTH + _data->_rxHeadS - _data->_rxTailS);
-  
-    #if defined(BUFFER_NOT_POWER_2)
-      if (num <  BUFFER_LENGTH) return  num;
-      else                      return (num - BUFFER_LENGTH);
-    #else
-      return (num & (BUFFER_LENGTH - 1));    //a bitwise AND is more space-efficient but needs power of 2 buffer lengths
-    #endif
+    rxHead  = &(_data->_rxHeadS);
+    rxTail  = &(_data->_rxTailS);
   }
+  else {
+    rxHead  = &(_data->_rxHead);
+    rxTail  = &(_data->_rxTail); 
+  }
+#else
+    rxHead  = &(_data->_rxHead);
+    rxTail  = &(_data->_rxTail); 
 #endif
   
-  num = (BUFFER_LENGTH + _data->_rxHead - _data->_rxTail);
+  
+  num = (BUFFER_LENGTH + (*rxHead) - (*rxTail));
    
-  #if defined(BUFFER_NOT_POWER_2)
-    if (num <  BUFFER_LENGTH) return  num;
-    else                      return (num - BUFFER_LENGTH);
-  #else
-    return (num & (BUFFER_LENGTH - 1));       //a bitwise AND is more space-efficient but needs power of 2 buffer lengths 
-  #endif
+#if defined(BUFFER_NOT_POWER_2)
+  if (num <  BUFFER_LENGTH) return  num;
+  else                      return (num - BUFFER_LENGTH);
+#else
+  return (num & (BUFFER_LENGTH - 1));       //a bitwise AND is more space-efficient but needs power of 2 buffer lengths 
+#endif
 }
 
 
@@ -480,11 +484,11 @@ void TWI_SlaveInterruptHandler(TWI_t *module) {
  *            the RXACK bit stays after every completed master READ (which terminates with a NACK), so 
  *            I had to make sure to only check the NACK after a master READ command arrived.
  *            Following States are possible: STOP, ADDR_W, ADDR_R, DATA_W, DATA_R, DATA_NACK
- *            To keep the code better maintainable, I had to use an alias (with #defines) for the variable names.
- *            If I did not, I would have had to write this function basically twice and if someone 
- *            changed it in one place but forgot the other, it would have just created chaos
- *
- *            the unclean solution with the defines might be resolved in the close future
+ *            To keep the code better maintainable ("Do not repeat yourself" or something like this)
+ *            I decided to use pointers - if MANDS, the compiler will work with the slave elements,
+ *            if MORS, the compiler will work with the (shared) slave elements. The extra pointer assignment
+ *            is not really translated into code, since the compiler would have used the load/store 
+ *            with displacement anyway due to the _data parameter being a pointer to a struct.
  *            
  *
  *@param      void (*function)(TWI_t *module) 
@@ -495,15 +499,33 @@ void TWI_SlaveInterruptHandler(TWI_t *module) {
  */
 void TWI_HandleSlaveIRQ(struct twiData *_data)
 {
-   uint8_t slaveStatus = _data->_module->SSTATUS;
-   uint8_t payload;           //Declaration in switch case does not work
-   uint8_t nextHead;
+  #if defined (TWI_MANDS)                           //Alias handler
+    uint8_t* address = &(_data->_incomingAddress);        
+    uint8_t* txHead  = &(_data->_txHeadS);                    
+    uint8_t* txTail  = &(_data->_txTailS);                    
+    uint8_t* rxHead  = &(_data->_rxHeadS);
+    uint8_t* rxTail  = &(_data->_rxTailS);
+    uint8_t* txBuffer = _data->_txBufferS;
+    uint8_t* rxBuffer = _data->_rxBufferS;
+  #else 
+    uint8_t* address = &(_data->_slaveAddress);        
+    uint8_t* txHead  = &(_data->_txHead);                    
+    uint8_t* txTail  = &(_data->_txTail);                    
+    uint8_t* rxHead  = &(_data->_rxHead);
+    uint8_t* rxTail  = &(_data->_rxTail);
+    uint8_t* txBuffer = _data->_txBuffer;
+    uint8_t* rxBuffer = _data->_rxBuffer;
+  #endif
+  
+  uint8_t slaveStatus = _data->_module->SSTATUS;
+  uint8_t payload;           //Declaration in switch case does not work
+  uint8_t nextHead;
    
   if (slaveStatus & (TWI_BUSERR_bm | TWI_COLL_bm)) //if Bus error/Collision was detected
   {
     payload = _data->_module->SDATA;      //Read data to remove Status flags
-    _data->_rxTailS = _data->_rxHeadS;    //Abort
-    _data->_txTailS = _data->_txHeadS;    //Abort
+    (*rxTail) = (*rxHead);    //Abort
+    (*txTail) = (*txHead);    //Abort
   }
   else                        //No Bus error/Collision was detected
   {
@@ -518,22 +540,22 @@ void TWI_HandleSlaveIRQ(struct twiData *_data)
       case 0x40:    //APIF
       case 0x42:    //APIF|DIR            //No CLKHOLD, everything is already finished
       case 0x60:    //APIF|CLKHOLD        //STOP on master write / slave read
-        _data->_module->SSTATUS = TWI_APIF_bm;      //Clear Flag, no further Action needed
+        _data->_module->SSTATUS = TWI_APIF_bm;    //Clear Flag, no further Action needed
       
-        NotifyUser_onReceive(_data);                //Notify user program "onReceive" if necessary
+        NotifyUser_onReceive(_data);              //Notify user program "onReceive" if necessary
         
-        _data->_rxTailS = _data->_rxHeadS;          //User should have handled all data, if not, set available rxBytes to 0     
+        (*rxTail) = (*rxHead);                    //User should have handled all data, if not, set available rxBytes to 0     
         break;
 
 
 //Address Interrupt
       case 0x61:    //APIF|CLKHOLD|AP       //ADR with master write / slave read
-        _data->_incomingAddress = _data->_module->SDATA;  //
+        (*address) = _data->_module->SDATA;  //
         _data->_module->SCTRLB = TWI_SCMD_RESPONSE_gc;    //"Execute Acknowledge Action succeeded by reception of next byte"
         break;                                            //expecting data interrupt next (case 0x80). Fills rxBuffer
        
       case 0x63:    //APIF|CLKHOLD|DIR|AP   //ADR with master read  / slave write
-        _data->_incomingAddress = _data->_module->SDATA;  //saving address to pass to the user function
+        (*address) = _data->_module->SDATA;  //saving address to pass to the user function
                                                           //There is no way to identify a REPSTART, so when a Master Read occurs after a master write
         NotifyUser_onReceive(_data);                      //Notify user program "onReceive" if necessary
         NotifyUser_onRequest(_data);                      //Notify user program "onRequest" if necessary
@@ -546,14 +568,14 @@ void TWI_HandleSlaveIRQ(struct twiData *_data)
       case 0xA0:    //DIF|CLKHOLD
       case 0xA1:    //DIF|CLKHOLD|AP
         payload = _data->_module->SDATA;
-        nextHead = TWI_advancePosition(_data->_rxHeadS);
-        if (nextHead == _data->_rxTailS) {            //if buffer is full
+        nextHead = TWI_advancePosition(*rxHead);
+        if (nextHead == (*rxTail)) {            //if buffer is full
           _data->_module->SCTRLB = TWI_ACKACT_bm | TWI_SCMD_COMPTRANS_gc; //"Execute Acknowledge Action succeeded by waiting for any Start (S/Sr) condition"
-          _data->_rxTailS = _data->_rxHeadS;                              //Dismiss all received Data since data integrity can't be guaranteed
-        } else {                                      //if buffer is not full
-          _data->_rxBufferS[_data->_rxHeadS] = payload;       //Load data into the buffer
-          _data->_rxHeadS = nextHead;                         //Advance Head
-          _data->_module->SCTRLB = TWI_SCMD_RESPONSE_gc;      //"Execute Acknowledge Action succeeded by reception of next byte"
+          (*rxTail) = (*rxHead);                                          //Dismiss all received Data since data integrity can't be guaranteed
+        } else {                                //if buffer is not full
+          rxBuffer[(*rxHead)] = payload;                  //Load data into the buffer
+          (*rxHead) = nextHead;                           //Advance Head
+          _data->_module->SCTRLB = TWI_SCMD_RESPONSE_gc;  //"Execute Acknowledge Action succeeded by reception of next byte"
         }
         break;
 
@@ -562,13 +584,13 @@ void TWI_HandleSlaveIRQ(struct twiData *_data)
 //Data Read Interrupt
       case 0xA2:    //DIF|CLKHOLD|DIR
       case 0xA3:    //DIF|CLKHOLD|DIR|AP
-        _data->_bools._ackMatters = true;             //start checking for NACK
-        if (_data->_txHeadS != _data->_txTailS) {       //Data is available
-          _data->_module->SDATA = _data->_txBufferS[_data->_txTailS]; //Writing to the register to send data
-          _data->_txTailS = TWI_advancePosition(_data->_txTailS);     //Advance tail   
-          _data->_module->SCTRLB = TWI_SCMD_RESPONSE_gc;              //"Execute a byte read operation followed by Acknowledge Action"
-        } else {                                         //No more data available
-          _data->_module->SCTRLB = TWI_SCMD_COMPTRANS_gc;             //"Wait for any Start (S/Sr) condition"
+        _data->_bools._ackMatters = true;         //start checking for NACK
+        if ((*txHead) != (*txTail)) {             //Data is available
+          _data->_module->SDATA = txBuffer[(*txTail)];      //Writing to the register to send data
+          (*txTail) = TWI_advancePosition(*txTail);         //Advance tail   
+          _data->_module->SCTRLB = TWI_SCMD_RESPONSE_gc;    //"Execute a byte read operation followed by Acknowledge Action"
+        } else {                                            //No more data available
+          _data->_module->SCTRLB = TWI_SCMD_COMPTRANS_gc;   //"Wait for any Start (S/Sr) condition"
         }
         break;
 
@@ -578,9 +600,9 @@ void TWI_HandleSlaveIRQ(struct twiData *_data)
       //case 0x90:  //DIF|RXACK
       case 0xB2:    //DIF|CLKHOLD|RXACK|DIR       //data NACK on master read  / slave write
       case 0xB3:    //DIF|CLKHOLD|RXACK|DIR|AP
-        _data->_bools._ackMatters = false;            //stop checking for NACK
-        _data->_module->SCTRLB = TWI_SCMD_COMPTRANS_gc;     //"Wait for any Start (S/Sr) condition"
-        _data->_txTailS = _data->_txHeadS;                  //Abort further data writes
+        _data->_bools._ackMatters = false;                //stop checking for NACK
+        _data->_module->SCTRLB = TWI_SCMD_COMPTRANS_gc;   //"Wait for any Start (S/Sr) condition"
+        (*txTail) = (*txHead);                            //Abort further data writes
         break;
 
 
@@ -596,8 +618,7 @@ void TWI_HandleSlaveIRQ(struct twiData *_data)
 
 
 
-void NotifyUser_onRequest(struct twiData *_data)
-{
+void NotifyUser_onRequest(struct twiData *_data) {
   if (_data->user_onRequest != NULL) {
     #if defined (TWI_MANDS)
       _data->_bools._toggleStreamFn = 0x01;
@@ -610,8 +631,7 @@ void NotifyUser_onRequest(struct twiData *_data)
 }
  
  
-void NotifyUser_onReceive(struct twiData *_data)
-{
+void NotifyUser_onReceive(struct twiData *_data) {
   if (_data->user_onReceive != NULL) {
     uint8_t numBytes;
     #if defined (TWI_MANDS)
@@ -631,8 +651,7 @@ void NotifyUser_onReceive(struct twiData *_data)
  
  //When used with a Buffer that has a power of 2, an AND can be performed to save a couple of Bytes
 //This might be important on tiny devices
-uint8_t TWI_advancePosition(uint8_t pos)
-{
+uint8_t TWI_advancePosition(uint8_t pos) {
   uint8_t nextPos = (pos + 1);
   
   #if defined (BUFFER_NOT_POWER_2) 
