@@ -224,17 +224,17 @@ void TWI_DisableSlave(struct twiData *_data) {
  *@return     void
  */
 void TWI_MasterSetBaud(struct twiData *_data, uint32_t frequency) {
-   if (_data->_bools._masterEnabled == 1) {       //Do something only if the master is really enabled.
+   if (_data->_bools._masterEnabled == 1) {       //Do something only if the master is enabled.
       uint8_t newBaud = TWI_MasterCalcBaud(frequency);    //get the new Baud value
       uint8_t oldBaud = _data->_module->MBAUD;            //load the old Baud value
-      if (newBaud != oldBaud)                       //compare both, in case the code is issuing this before every transmission.
+      if (newBaud != oldBaud)                     //compare both, in case the code is issuing this before every transmission.
       {
          uint8_t restore = _data->_module->MCTRLA;          //Save the old Master state
          _data->_module->MCTRLA = 0;                        //Disable Master
          _data->_module->MBAUD = newBaud;                   //update Baud register
 
-         if (frequency > 800000){  _data->_module->CTRLA |=  TWI_FMPEN_bm;} //set   FM+
-         else                   {  _data->_module->CTRLA &= ~TWI_FMPEN_bm;} //clear FM+
+         if (frequency >= 600000){  _data->_module->CTRLA |=  TWI_FMPEN_bm;} //set   FM+
+         else                    {  _data->_module->CTRLA &= ~TWI_FMPEN_bm;} //clear FM+
 
          _data->_module->MCTRLA  = restore;                 //restore the old register, thus enabling it again
          _data->_module->MSTATUS = TWI_BUSSTATE_IDLE_gc;    //Force the state machine into Idle according to the data sheet
