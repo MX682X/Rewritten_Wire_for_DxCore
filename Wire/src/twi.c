@@ -91,11 +91,11 @@ void TWI_MasterInit(struct twiData *_data) {
  *                _bools._slaveEnabled
  *                _module
  *@param      uint8_t address holds the primary address that this TWI slave should listen to
- *@param      uint8_t receive_broadcast if true, instructs the TWI slave to react to the 
+ *            uint8_t receive_broadcast if true, instructs the TWI slave to react to the 
  *              general TWI call 0x00
- *@param      uint8_t second_address holds the data for the SADDRMASK register. If the LSB is '1'
- *            the TWI handles the 7 MSB as a second address for the slave, otherwise the 7 MSB
- *            act as a bit mask, that disables the check on the corresponding SADDR bit.
+ *            uint8_t second_address holds the data for the SADDRMASK register. If the LSB is '1'
+ *              the TWI handles the 7 MSB as a second address for the slave, otherwise the 7 MSB
+ *              act as a bit mask, that disables the check on the corresponding SADDR bit.
  *
  *@return     void
  */
@@ -173,10 +173,13 @@ void TWI_Disable(struct twiData *_data) {
  *@return     void
  */
 void TWI_DisableMaster(struct twiData *_data) {
-  _data->_module->MCTRLA = 0x00;
+  if(true == _data->_bools._masterEnabled) {
+    if(false == _data->_bools._slaveEnabled) {
+      _data->_module->MCTRLA = 0x00;      //has to stay enabled for bus error circuitry
+    }
   _data->_module->MBAUD = 0x00;
   _data->_bools._masterEnabled = 0x00;
-  
+  }
 }
 
 
@@ -189,29 +192,36 @@ void TWI_DisableMaster(struct twiData *_data) {
  *                _module
  *@return     void
  */
-void TWI_DisableSlave(struct twiData *_data)
-{
-  _data->_module->SADDR = 0x00;
-  _data->_module->SCTRLA = 0x00;
-  _data->_module->SADDRMASK = 0x00;
-  _data->_bools._slaveEnabled = 0x00;
+void TWI_DisableSlave(struct twiData *_data) {
+  if(true == _data->_bools._slaveEnabled) {
+    if(false == _data->_bools._masterEnabled) {
+      _data->_module->MCTRLA = 0x00;      //might be enabled for bus error circuitry
+    }
+    _data->_module->SADDR = 0x00;
+    _data->_module->SCTRLA = 0x00;
+    _data->_module->SADDRMASK = 0x00;
+    _data->_bools._slaveEnabled = 0x00;
+    #if defined (TWI_DUALCTRL)
+      _data->_module->DUALCTRL = 0x00;    //Disable pin splitting when available
+    #endif
+  }
 }
 
 
 
 /**
- *@brief              TWI_MasterSetBaud sets the baud register to get the desired frequency
+ *@brief      TWI_MasterSetBaud sets the baud register to get the desired frequency
  *
- *                    After checking if the master is actually enabled, the new baud is calculated.
- *            Then it is compared to the old baud. Only if they differ, the master is disabled,
- *             the baud register updated, and the master re-enabled
+ *            After checking if the master is actually enabled, the new baud is calculated.
+ *              Then it is compared to the old baud. Only if they differ, the master is disabled,
+ *              the baud register updated, and the master re-enabled
  *
- *@param              struct twiData *_data is a pointer to the structure that holds the variables
- *            of a Wire object. Following struct elements are used in this function:
- *            _bools._masterEnabled
- *            _module
+ *@param      struct twiData *_data is a pointer to the structure that holds the variables
+ *              of a Wire object. Following struct elements are used in this function:
+ *              _bools._masterEnabled
+ *              _module
  *
- *@return             void
+ *@return     void
  */
 void TWI_MasterSetBaud(struct twiData *_data, uint32_t frequency) {
    if (_data->_bools._masterEnabled == 1) {       //Do something only if the master is really enabled.
@@ -244,10 +254,10 @@ void TWI_MasterSetBaud(struct twiData *_data, uint32_t frequency) {
  *            due to the _toggleStreamFn flag
  *
  *@param      struct twiData *_data is a pointer to the structure that holds the variables
- *						  of a Wire object. Following struct elements are used in this function:
- *						    _bools._toggleStreamFn
+ *              of a Wire object. Following struct elements are used in this function:
+ *                _bools._toggleStreamFn
  *                _rxHead(S)
- *						    _rxTail(S)
+ *                _rxTail(S)
  *
  *@return     uint8_t
  *@retval     amount of bytes available to read from the master or slave buffer
@@ -293,10 +303,10 @@ uint8_t TWI_Available(struct twiData *_data) {
  *            
  *
  *@param      struct twiData *_data is a pointer to the structure that holds the variables
- *						  of a Wire object. Following struct elements are used in this function:
- *						    _txBuffer[]
+ *              of a Wire object. Following struct elements are used in this function:
+ *                _txBuffer[]
  *                _txHead
- *						    _txTail
+ *                _txTail
  *            bool send_stop enables the STOP condition at the end of a write
  *
  *@return     uint8_t
@@ -366,16 +376,17 @@ uint8_t TWI_MasterWrite(struct twiData *_data, bool send_stop)  {
  *            
  *
  *@param      struct twiData *_data is a pointer to the structure that holds the variables
- *						  of a Wire object. Following struct elements are used in this function:
- *						    _rxBuffer[]
+ *              of a Wire object. Following struct elements are used in this function:
+ *                _rxBuffer[]
  *                _rxHead
- *						    _rxTail
+ *                _rxTail
+ *
  *            uint8_t bytesToRead is the desired amount of bytes to read. When finished, a
  *              NACK is issued.
  *            bool send_stop enables the STOP condition at the end of a write
  *
  *@return     uint8_t
- *@retval     amount of bytes that were actually read. If 0, no read took place due to an bus error           
+ *@retval     amount of bytes that were actually read. If 0, no read took place due to a bus error           
  */
 uint8_t TWI_MasterRead(struct twiData *_data, uint8_t bytesToRead, bool send_stop) {
    
@@ -491,14 +502,19 @@ void TWI_SlaveInterruptHandler(TWI_t *module) {
  *            with displacement anyway due to the _data parameter being a pointer to a struct.
  *            
  *
- *@param      void (*function)(TWI_t *module) 
- *              (*function)     - the name of the function that returns void
- *              (TWI_t *module) - and accepts the pointer to a TWI module as a parameter
+ *@param      struct twiData *_data is a pointer to the structure that holds the variables
+ *              of a Wire object. Following struct elements are used in this function:
+ *                _incomingAddress/_slaveAddress
+ *                _txHead(S)
+ *                _txTail(S)
+ *                _rxHead(S)
+ *                _rxTail(S)
+ *                _txBuffer(S)[]
+ *                _rxBuffer(S)[]
  *
  *@return     void        
  */
-void TWI_HandleSlaveIRQ(struct twiData *_data)
-{
+void TWI_HandleSlaveIRQ(struct twiData *_data) {
   #if defined (TWI_MANDS)                           //Alias handler
     uint8_t* address = &(_data->_incomingAddress);        
     uint8_t* txHead  = &(_data->_txHeadS);                    
@@ -618,6 +634,21 @@ void TWI_HandleSlaveIRQ(struct twiData *_data)
 
 
 
+/**
+ *@brief      NotifyUser_onRequest is called from the TWI_HandleSlaveIRQ function on master READ
+ *  
+ *            This function calls the user defined function in the sketch if it was 
+ *            registered. It is issued on master READ
+ *            
+ *
+ *@param      struct twiData *_data is a pointer to the structure that holds the variables
+ *              of a Wire object. Following struct elements are used in this function:
+ *                _bools
+ *                user_onRequest()
+ *              
+ *
+ *@return     void        
+ */
 void NotifyUser_onRequest(struct twiData *_data) {
   if (_data->user_onRequest != NULL) {
     #if defined (TWI_MANDS)
@@ -630,7 +661,23 @@ void NotifyUser_onRequest(struct twiData *_data) {
   }
 }
  
- 
+
+/**
+ *@brief      NotifyUser_onRequest is called from the TWI_HandleSlaveIRQ function on master WRITE
+ *  
+ *            This function calls the user defined function in the sketch if it was 
+ *            registered. It is issued on master WRITE. the user defined function is only called 
+ *            if there were bytes written. it passes the amount of written bytes to the user function
+ *            
+ *
+ *@param      struct twiData *_data is a pointer to the structure that holds the variables
+ *              of a Wire object. Following struct elements are used in this function:
+ *                _bools
+ *                user_onReceive()
+ *              
+ *
+ *@return     void        
+ */ 
 void NotifyUser_onReceive(struct twiData *_data) {
   if (_data->user_onReceive != NULL) {
     uint8_t numBytes;
@@ -649,8 +696,22 @@ void NotifyUser_onReceive(struct twiData *_data) {
   }
 }
  
- //When used with a Buffer that has a power of 2, an AND can be performed to save a couple of Bytes
-//This might be important on tiny devices
+/**
+ *@brief      TWI_advancePosition increments the given number if it smaller then the BUFFER_LENGTH value
+ *  
+ *            When using round-robin buffers, it is important to reset at 0 when the position reaches
+ *            the end of a buffer. This is done with this inline function. 
+ *            Because the AVR Dx chips were using a buffer of 130. I was not able to use the trick with
+ *            the bitwise AND on Buffers that are a power of 2. To reduce the space usage on the smaller
+ *            chips, I decided to add a #define based check to use the bitwise AND. To avoid duplicates of
+ *            this part of the code, I wrote an extra function for that. It also increases readability.
+ *            
+ *
+ *@param      uint8_t pos is the number to be incremented/set to zero
+ *
+ *@return     uint8_t  
+ *@retval     the incremented number or zero. 
+ */ 
 uint8_t TWI_advancePosition(uint8_t pos) {
   uint8_t nextPos = (pos + 1);
   
@@ -663,11 +724,18 @@ uint8_t TWI_advancePosition(uint8_t pos) {
   return nextPos;
 }
 
+
+/**
+ *@brief      TWI0 Slave Interrupt vector
+ */
 ISR(TWI0_TWIS_vect) {
   TWI_SlaveInterruptHandler(&TWI0);
 }
 
 
+/**
+ *@brief      TWI1 Slave Interrupt vector
+ */
 #if defined (TWI1)
 ISR(TWI1_TWIS_vect) {
   TWI_SlaveInterruptHandler(&TWI1);

@@ -35,10 +35,9 @@ extern "C" {
 #include "Arduino.h"
 #include "Wire.h"
 #include "twi_pins.h"
-//#include "twiData_struct.h"
 
 
-extern "C" {
+extern "C" {    //compiler was complaining when I put twi.h into the upper C include part
 #include "twi.h"
 }
 
@@ -49,131 +48,265 @@ extern "C" {
 // Initialize Class Variables //////////////////////////////////////////////////
 
 // Constructors ////////////////////////////////////////////////////////////////
-      
+/**
+ *@brief      TwoWire creates a Wire object
+ *
+ *@param      TWI_t *module - the pointer to the TWI module that the Wire object is supposed to use
+ *
+ *@return     constructor has can't return anything
+ */     
 TwoWire::TwoWire(TWI_t *twi_module) {  
-   vars._module = twi_module;
-   vars.user_onRequest = NULL;  //Make sure to initialize this pointers
-   vars.user_onReceive = NULL;  //This avoids weird jumps should something unexpected happen
+  vars._module = twi_module;
+  vars.user_onRequest = NULL;  //Make sure to initialize this pointers
+  vars.user_onReceive = NULL;  //This avoids weird jumps should something unexpected happen
 }
 
 // Public Methods //////////////////////////////////////////////////////////////
+/**
+ *@brief      pins changes the PINMUX to correspond to the desired pins            
+ *            
+ *
+ *@param      uint8_t sda_pin is the desired pin for SDA
+ *            uint8_t scl_pin is the desired pin for SCL
+ *
+ *@return     bool
+ *@retval     true if change was successful          
+ */
 bool TwoWire::pins(uint8_t sda_pin, uint8_t scl_pin) {
-   #if defined (TWI1)
-      if      (&TWI0 == vars._module)  {return TWI0_Pins(sda_pin, scl_pin);}
-      else if (&TWI1 == vars._module)  {return TWI1_Pins(sda_pin, scl_pin);}
-      else                             {return false;}
-   #else
-      return TWI0_Pins(sda_pin, scl_pin); 
-   #endif
+  #if defined (TWI1)
+    if      (&TWI0 == vars._module)  {return TWI0_Pins(sda_pin, scl_pin);}
+    else if (&TWI1 == vars._module)  {return TWI1_Pins(sda_pin, scl_pin);}
+    else                             {return false;}
+  #else
+    return TWI0_Pins(sda_pin, scl_pin); 
+  #endif
 }
 
 
+/**
+ *@brief      swap works like pins, but is smaller         
+ *            
+ *
+ *@param      uint8_t state is the desired value for the PINMUX register
+ *
+ *@return     bool
+ *@retval     true if change was successful          
+ */
 bool TwoWire::swap(uint8_t state) {
-   #if defined (TWI1)
-      if      (&TWI0 == vars._module) {return TWI0_swap(state);}
-      else if (&TWI1 == vars._module) {return TWI1_swap(state);}
-      else                            {return false;}
-   #else
-      return TWI0_swap(state);
-   #endif
+  #if defined (TWI1)
+    if      (&TWI0 == vars._module) {return TWI0_swap(state);}
+    else if (&TWI1 == vars._module) {return TWI1_swap(state);}
+    else                            {return false;}
+  #else
+    return TWI0_swap(state);
+  #endif
 }
 
 
+/**
+ *@brief      swapModule changes the TWI module if only one Wire object is used    
+ *            
+ *            Works only if the TWI is disabled
+ *            
+ *
+ *@param      TWI_t *module - the new pointer to a TWI module for this object
+ *
+ *@return     bool
+ *@retval     true if change was successful          
+ */
 bool TwoWire::swapModule(TWI_t *twi_module) {
-   #if defined (TWI1)
-      #if defined (USING_TWI1)
-        badCall("swapModule() can only be used if TWI1 is not used");
-      #else
-         if (vars._module->MCTRLA == 0)   //slave and master inits enable MCTRLA, so just check for that
-         { 
-            vars._module = twi_module;   
-            return true;         //Success
-         }
+  #if defined (TWI1)
+    #if defined (USING_TWI1)
+      badCall("swapModule() can only be used if TWI1 is not used");
+    #else
+      if (vars._module->MCTRLA == 0) {   //slave and master inits enable MCTRLA, so just check for that
+        vars._module = twi_module;   
+        return true;         //Success
+      }
       #endif
-   #else
-        badCall("Only one TWI module available, nothing to switch with");
-    (void)twi_module; //Remove warning unused variable
-   #endif
-   return false;
+  #else
+      badCall("Only one TWI module available, nothing to switch with");
+      (void)twi_module; //Remove warning unused variable
+  #endif
+  return false;
 }
 
 
+/**
+ *@brief      usePullups enables the PULL-UP on the TWI pins.    
+ *            
+ *            This function is using the PORTMUX value, so use it after swap()!
+ *            
+ *
+ *@param      void
+ *
+ *@return     void   
+ */
 void TwoWire::usePullups(void) {
-   #if defined (TWI1)
-      if      (&TWI0 == vars._module) {TWI0_usePullups();}
-      else if (&TWI1 == vars._module) {TWI1_usePullups();}
-   #else
-      TWI0_usePullups();
-   #endif
+  #if defined (TWI1)
+    if      (&TWI0 == vars._module) {TWI0_usePullups();}
+    else if (&TWI1 == vars._module) {TWI1_usePullups();}
+  #else
+    TWI0_usePullups();
+  #endif
 }
 
 
-// *INDENT-ON* The rest is okay to stylecheck
+
+/**
+ *@brief      begin (w/o parameters) starts initializes the master operation of the TWI    
+ *            
+ *@param      void
+ *
+ *@return     void   
+ */
 void TwoWire::begin(void) {
-   TWI_MasterInit(&vars);
-   TWI_MasterSetBaud(&vars, DEFAULT_FREQUENCY);
+  TWI_MasterInit(&vars);
+  TWI_MasterSetBaud(&vars, DEFAULT_FREQUENCY);
 }
 
 
+/**
+ *@brief      begin (w/ parameters) changes the TWI module if only one Wire object is used    
+ *            
+ *            Works only if the TWI is disabled
+ *            
+ *
+ *@param      uint8_t address - the desired address for the slave module
+ *            bool receive_broadcast - if true, enables a response on the 0x00 call
+ *            uint8_t second_address holds the data for the SADDRMASK register. If the LSB is '1'
+ *              the TWI handles the 7 MSB as a second address for the slave, otherwise the 7 MSB
+ *              act as a bit mask, that disables the check on the corresponding SADDR bit.
+ *
+ *@return     void        
+ */
 void TwoWire::begin(uint8_t address, bool receive_broadcast, uint8_t second_address) {
   TWI_SlaveInit(&vars, address, receive_broadcast, second_address);
   TWI_RegisterSlaveISRcallback(onSlaveIRQ);                          //give the C part of the programm a pointer to call back to.
 }
 
 
+/**
+ *@brief      setClock sets the baud register to get the desired frequency
+ *
+ *            Has only an effect when used after begin(void)
+ *
+ *@param      uint32_t clock - the desired clock in Hertz
+ *
+ *@return     void
+ */
 void TwoWire::setClock(uint32_t clock) {
   TWI_MasterSetBaud(&vars, clock);
 }
 
 
+/**
+ *@brief      end disables the TWI master and slave
+ *
+ *@param      void
+ *
+ *@return     void
+ */
 void TwoWire::end(void) {
   TWI_Disable(&vars);
 }
+
+
+/**
+ *@brief      endMaster disables the TWI master
+ *
+ *@param      void
+ *
+ *@return     void
+ */
 void TwoWire::endMaster(void) {
   TWI_DisableMaster(&vars);
 }
+
+
+/**
+ *@brief      endSlave disables the TWI slave
+ *
+ *@param      void
+ *
+ *@return     void
+ */
 void TwoWire::endSlave(void) {
   TWI_DisableSlave(&vars);
 }
 
 
-uint8_t TwoWire::requestFrom(uint8_t address, uint8_t quantity)                       {return requestFrom((uint8_t)address, (uint8_t)quantity, (uint8_t)1);}
-uint8_t TwoWire::requestFrom(uint8_t address, size_t  quantity, bool    sendStop)     {return requestFrom((uint8_t)address, (uint8_t)quantity, (uint8_t)sendStop);}
-uint8_t TwoWire::requestFrom(uint8_t address, size_t  quantity)                       {return requestFrom((uint8_t)address, (uint8_t)quantity, (uint8_t)1);}
-uint8_t TwoWire::requestFrom(int     address, int     quantity, int     sendStop)     {return requestFrom((uint8_t)address, (uint8_t)quantity, (uint8_t)sendStop);}
-uint8_t TwoWire::requestFrom(int     address, int     quantity)                       {return requestFrom((uint8_t)address, (uint8_t)quantity, (uint8_t)1);}
+
+
+/**
+ *@brief      requestFrom sends a master READ with the specified slave address
+ *  
+ *            When a greater quantity then the BUFFER_LENGTH is passed, the quantity gets
+ *            limited to the BUFFER_LENGTH.
+ *            Received Bytes must be read with read().
+ *            
+ *@param      int/uint8_t address - the address of the slave
+ *            int/uint8_t/size_t quantity - the amount of bytes that are expected to be received
+ *            int/bool sendStop - if the transaction should be terminated with a STOP condition
+ *
+ *@return     uint8_t
+ *@retval     amount of bytes that were actually read. If 0, no read took place due to a bus error.           
+ */
+uint8_t TwoWire::requestFrom(uint8_t address, uint8_t quantity)                   {return requestFrom((uint8_t)address, (uint8_t)quantity, (uint8_t)1);}
+uint8_t TwoWire::requestFrom(uint8_t address, size_t  quantity, bool    sendStop) {return requestFrom((uint8_t)address, (uint8_t)quantity, (uint8_t)sendStop);}
+uint8_t TwoWire::requestFrom(uint8_t address, size_t  quantity)                   {return requestFrom((uint8_t)address, (uint8_t)quantity, (uint8_t)1);}
+uint8_t TwoWire::requestFrom(int     address, int     quantity, int     sendStop) {return requestFrom((uint8_t)address, (uint8_t)quantity, (uint8_t)sendStop);}
+uint8_t TwoWire::requestFrom(int     address, int     quantity)                   {return requestFrom((uint8_t)address, (uint8_t)quantity, (uint8_t)1);}
 
 uint8_t TwoWire::requestFrom(uint8_t address, uint8_t quantity, uint8_t sendStop) {
   if (quantity > BUFFER_LENGTH) {
     quantity = BUFFER_LENGTH;
   }
   
-  setSlaveAddress(address);
+  vars._slaveAddress = address << 1;
 
   return TWI_MasterRead(&vars, quantity, sendStop);
 }
 
 
+/**
+ *@brief      beginTransmission prepares the Wire object for a master WRITE.
+ *  
+ *            This function only saves the slave address in the structure, it does 
+ *            not perform any transmissions. 
+ *            a write() will fill the transmit buffer. write() has to be called after
+ *            beginTransmission() was called
+ *            
+ *@param      uint8_t address - the address of the slave
+ *
+ *@return     void     
+ */
 void TwoWire::beginTransmission(uint8_t address) {
   // set address of targeted slave
-  setSlaveAddress(address);
+  vars._slaveAddress = address << 1;
   vars._txTail = vars._txHead;  //reset transmitBuffer 
 }
 
 
-//
-//  Originally, 'endTransmission' was an f(void) function.
-//  It has been modified to take one parameter indicating
-//  whether or not a STOP should be performed on the bus.
-//  Calling endTransmission(false) allows a sketch to
-//  perform a repeated start.
-//
-//  WARNING: Nothing in the library keeps track of whether
-//  the bus tenure has been properly ended with a STOP. It
-//  is very possible to leave the bus in a hung state if
-//  no call to endTransmission(true) is made. Some I2C
-//  devices will behave oddly if they do not see a STOP.
-//
+/**
+ *@brief      endTransmission is the function that actually performs the (blocking) master WRITE
+ *  
+ *            Originally, 'endTransmission' was an f(void) function. It has been modified to take 
+ *            one parameter indicating whether or not a STOP should be performed on the bus.
+ *            Calling endTransmission(false) allows a sketch to perform a repeated start. 
+ *
+ *            WARNING: Nothing in the library keeps track of whether the bus tenure has been 
+ *            properly ended with a STOP. It is very possible to leave the bus in a hung state if
+ *            no call to endTransmission(true) is made. Some I2C devices will behave oddly
+ *            if they do not see a STOP. Other masters won't be able to issue their START for example.
+ *            
+ *@param      bool sendStop - if the transaction should be terminated with a STOP condition
+ *
+ *
+ *@return     uint8_t
+ *@retval     amount of bytes that were actually written. If it differs from the amount that was expected
+ *              an error might have occurred. 
+ */
 uint8_t TwoWire::endTransmission(bool sendStop) {
   // transmit (blocking)
   return TWI_MasterWrite(&vars, sendStop);
@@ -181,9 +314,18 @@ uint8_t TwoWire::endTransmission(bool sendStop) {
 
 
 
-// must be called in:
-// slave tx event callback
-// or after beginTransmission(address)
+/**
+ *@brief      write fills the transmit buffers, master or slave depending on when it is called
+ *  
+ *            Usually, the function fills the master transmit buffer. 
+ *            If called inside the specified onReceive or onRequest functions, the slave buffer will be filled
+ *            
+ *@param      uint8_t data - byte to put into the buffer
+ *
+ *
+ *@return     uint8_t
+ *@retval     1 if successful, 0 if the buffer is full
+ */
 size_t TwoWire::write(uint8_t data) {
   
   uint8_t nextHead;
@@ -192,9 +334,9 @@ size_t TwoWire::write(uint8_t data) {
   uint8_t* txBuffer;
    
 #if defined (TWI_MANDS)                         //Alias handler
-  if (vars._bools._toggleStreamFn == 0x01) {  
-    txHead  = &(vars._txHeadS);
-    txTail  = &(vars._txTailS);
+  if (vars._bools._toggleStreamFn == 0x01) {    //called from Slave IRQ
+    txHead  = &(vars._txHeadS);                 
+    txTail  = &(vars._txTailS);             
     txBuffer = vars._txBufferS;
   }
   else {
@@ -202,7 +344,7 @@ size_t TwoWire::write(uint8_t data) {
     txTail  = &(vars._txTail); 
     txBuffer = vars._txBuffer;
   }
-#else
+#else                                           //MORS - M/S are using the same buffer
     txHead  = &(vars._txHead);
     txTail  = &(vars._txTail); 
     txBuffer = vars._txBuffer;
@@ -220,9 +362,18 @@ size_t TwoWire::write(uint8_t data) {
 }
 
 
-// must be called in:
-// slave tx event callback
-// or after beginTransmission(address)
+/**
+ *@brief      write for arrays
+ *  
+ *            calls the write function in a for-loop
+ *            
+ *@param      uint8_t *data - pointer to the array
+ *            size_t quantity - amount of bytes to copy
+ *
+ *
+ *@return     uint8_t
+ *@retval     amount of bytes copied
+ */
 size_t TwoWire::write(const uint8_t *data, size_t quantity) {
 
   for (size_t i = 0; i < quantity; i++) {
@@ -237,8 +388,13 @@ size_t TwoWire::write(const uint8_t *data, size_t quantity) {
 /**
  *@brief      available returns the amount of bytes that are available to read in the master or slave buffer
  *
+ *            Usually, the function returns the amount of bytes to read in the master buffer. 
+ *            If called inside the specified onReceive or onRequest functions, 
+ *            it returns the amount of bytes from the slave buffer
  *
- *@return     uint8_t
+ *@param      void
+ *
+ *@return     int
  *@retval     amount of bytes available to read from the master buffer
  */
 int TwoWire::available(void) {
@@ -247,9 +403,18 @@ int TwoWire::available(void) {
 
 
 
-// must be called in:
-// slave rx event callback
-// or after requestFrom(address, numBytes)
+/**
+ *@brief      read returns a byte from the master or slave buffer and removes it from there
+ *
+ *            Usually, the function returns the byte from the master buffer.
+ *            If called inside the specified onReceive or onRequest functions, 
+ *            it returns the byte from the slave buffer
+ *
+ *@param      void
+ *
+ *@return     int
+ *@retval     byte in the buffer or -1 if buffer is empty
+ */
 int TwoWire::read(void) {
   
   uint8_t* rxHead;
@@ -285,9 +450,18 @@ int TwoWire::read(void) {
 }
 
 
-// must be called in:
-// slave rx event callback
-// or after requestFrom(address, numBytes)
+/**
+ *@brief      peek returns a byte from the master or slave buffer but does not remove it
+ *
+ *            Usually, the function returns the byte from the master buffer.
+ *            If called inside the specified onReceive or onRequest functions, 
+ *            it returns the byte from the slave buffer
+ *
+ *@param      void
+ *
+ *@return     int
+ *@retval     byte in the buffer or -1 if buffer is empty
+ */
 int TwoWire::peek(void) {
   
   uint8_t* rxHead;
@@ -316,8 +490,13 @@ int TwoWire::peek(void) {
 }
 
 
-// can be used to get out of an error state in TWI module
-// e.g. when MDATA register is written before MADDR
+/**
+ *@brief      flush resets the master and slave buffers and restarts the TWI module
+ *
+ *@param      void
+ *
+ *@return     void
+ */
 void TwoWire::flush(void) {
   vars._rxTail = vars._rxHead;
   vars._txHead = vars._txHead;
@@ -330,11 +509,37 @@ void TwoWire::flush(void) {
   TWI_Flush(&vars);
 }
 
+/**
+ *@brief      getIncomingAddress returns the last address the slave has reacted to
+ *
+ *            When used in master only mode, it will return the slaveAddress
+ *            that was set by the user in beginTransmission()
+ *
+ *@param      void
+ *
+ *@return     uint8_t
+ *@retval     left-shifted I2C address with the write/read bit 
+ */
 uint8_t TwoWire::getIncomingAddress(void) {
-  return vars._incomingAddress;
+  #if defined (TWI_MANDS)                         //Alias handler
+    return vars._incomingAddress;
+  #else
+    return vars._slaveAddress;
+  #endif 
 }
 
 
+/**
+ *@brief      enableDualMode enables the splitting of master and slave pins
+ *
+ *            useful when you want to separate multiple TWI buses.
+ *            Only available on the chips with a bigger pin count. See data sheet.
+ *
+ *@param      bool fmp_enable - set true if the TWI module has to expect a high 
+ *              frequency on the salve pins
+ *
+ *@return     void
+ */
 #if defined (TWI_DUALCTRL)
 void TwoWire::enableDualMode(bool fmp_enable) {
   vars._module->DUALCTRL = ((fmp_enable << TWI_FMPEN_bp) | TWI_ENABLE_bm);
@@ -345,7 +550,21 @@ void TwoWire::enableDualMode(bool fmp_enable) {
 
 
 
-
+/**
+ *@brief      onSlaveIRQ is called by the interrupts and calls the interrupt handler
+ *  
+ *            Another little hack I had to do: This function is static, thus there is no extra copy 
+ *            when a new Wire object, like Wire1 is initialized. When I first wrote this function 
+ *            I was using Wire.vars.module and Wire1.vars.module to figure out which pointer to pass,
+ *            but this made the compiler create a Wire1 object in some cases, where Wire1 was never used
+ *            by the user. So I rewrote this function with the though that if the module can be different,
+ *            there is just one Wire object, so the code doesn't have to check if Wire is using TWI0 or TWI1
+ *                
+ *
+ *@param      TWI_t *module - the pointer to the TWI module
+ *
+ *@return     void
+ */
 void TwoWire::onSlaveIRQ(TWI_t *module){                 //This function is static and is, thus, the only one for both
                                                          //Wire interfaces. Here is decoded which interrupt was fired.
 
@@ -370,23 +589,41 @@ void TwoWire::onSlaveIRQ(TWI_t *module){                 //This function is stat
 
 
 
-// sets function called on slave write
+/**
+ *@brief      onReceive saves the pointer to the desired function to call on master WRITE / slave READ.
+ *
+ *            remember, the specified function is called in an ISR, so keep it short.
+ *
+ *@param      void (*function)(int) - a void returning function that accepts an int as parameter
+ *
+ *@return     void
+ */
 void TwoWire::onReceive(void (*function)(int)) {
   vars.user_onReceive = function;
 }
 
 
-// sets function called on slave read
+/**
+ *@brief      onRequest saves the pointer to the desired function to call on master READ / slave WRITE.
+ *
+ *            remember, the specified function is called in an ISR, so keep it short.
+ *
+ *@param      void (*function)(void) - a void returning function that does not accept any parameters
+ *
+ *@return     void
+ */
 void TwoWire::onRequest(void (*function)(void)) {
   vars.user_onRequest = function;
 }
 
 
-void TwoWire::setSlaveAddress(uint8_t slave_address){
-   vars._slaveAddress = slave_address << 1;
-}  
 
 
+/**
+ *  Wire object constructors with the default TWI modules. 
+ *  If there is absolutely no way to swap the pins physically,
+ *  here is the best way to do so in software.
+ */
 #if defined(TWI0)
   TwoWire Wire(&TWI0);
 #endif

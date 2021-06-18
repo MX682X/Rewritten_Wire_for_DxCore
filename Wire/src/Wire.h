@@ -55,10 +55,8 @@ extern "C" {
 
 class TwoWire: public Stream {
   private:
-    twiData vars;                 //variables that are passed to the twi.c functions
-  
-    void setSlaveAddress(uint8_t slave_address);
-   
+    twiData vars;                 //using a struct to reduce the amount of parameters that have to be passed
+
   public:
     TwoWire(TWI_t *twi_module);
     bool pins(uint8_t sda_pin, uint8_t scl_pin);
@@ -108,8 +106,7 @@ class TwoWire: public Stream {
     inline size_t write(unsigned int n)   {return write((uint8_t)n);}
     inline size_t write(int n)            {return write((uint8_t)n);}
 
-  //Functions for simultaneous master and slave operation
-    void   enableDualMode(bool fmp_enable);      //Moves the Slave to other pins
+    void   enableDualMode(bool fmp_enable);      //Moves the Slave to dedicated pins
     
     using Print::write;  
 
