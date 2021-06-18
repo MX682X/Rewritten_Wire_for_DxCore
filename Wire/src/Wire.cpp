@@ -219,9 +219,11 @@ void TwoWire::end(void) {
  *
  *@return     void
  */
+#if defined (TWI_MANDS)
 void TwoWire::endMaster(void) {
   TWI_DisableMaster(&vars);
 }
+#endif
 
 
 /**
@@ -231,10 +233,11 @@ void TwoWire::endMaster(void) {
  *
  *@return     void
  */
+#if defined (TWI_MANDS)
 void TwoWire::endSlave(void) {
   TWI_DisableSlave(&vars);
 }
-
+#endif
 
 
 
