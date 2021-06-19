@@ -285,9 +285,16 @@ uint8_t TwoWire::requestFrom(uint8_t address, uint8_t quantity, uint8_t sendStop
  *@return     void     
  */
 void TwoWire::beginTransmission(uint8_t address) {
+  #if defined (TWI_MERGE_BUFFERS)                 //Same Buffers for tx/rx
+    uint8_t* txHead  = &(vars._trHead);                    
+    uint8_t* txTail  = &(vars._trTail);                    
+  #else                                           //Separate tx/rx Buffers
+    uint8_t* txHead  = &(vars._txHead);                    
+    uint8_t* txTail  = &(vars._txTail);                    
+  #endif
   // set address of targeted slave
   vars._slaveAddress = address << 1;
-  vars._txTail = vars._txHead;  //reset transmitBuffer 
+  (*txTail) = (*txHead);  //reset transmitBuffer 
 }
 
 
@@ -335,23 +342,32 @@ size_t TwoWire::write(uint8_t data) {
   uint8_t* txHead;
   uint8_t* txTail;
   uint8_t* txBuffer;
-   
-#if defined (TWI_MANDS)                         //Alias handler
-  if (vars._bools._toggleStreamFn == 0x01) {    //called from Slave IRQ
-    txHead  = &(vars._txHeadS);                 
-    txTail  = &(vars._txTailS);             
-    txBuffer = vars._txBufferS;
-  }
-  else {
-    txHead  = &(vars._txHead);
-    txTail  = &(vars._txTail); 
-    txBuffer = vars._txBuffer;
-  }
-#else                                           //MORS - M/S are using the same buffer
-    txHead  = &(vars._txHead);
-    txTail  = &(vars._txTail); 
-    txBuffer = vars._txBuffer;
-#endif
+  
+  #if defined (TWI_MANDS)                           //Add following if master and slave are split
+    if (vars._bools._toggleStreamFn == 0x01) {  
+      #if defined (TWI_MERGE_BUFFERS)                 //Separate tx/rx Buffers                    
+        txHead  = &(vars._trHeadS);                 
+        txTail  = &(vars._trTailS);   
+        txBuffer = vars._trBufferS;
+      #else                                           //Same Buffers for tx/rx                   
+        txHead  = &(vars._txHeadS);                 
+        txTail  = &(vars._txTailS);   
+        txBuffer = vars._txBufferS;
+      #endif
+    }
+    else
+  #endif 
+  {
+    #if defined (TWI_MERGE_BUFFERS)               //Same Buffers for tx/rx                     
+      txHead  = &(vars._trHead);
+      txTail  = &(vars._trTail); 
+      txBuffer = vars._trBuffer;
+    #else                                         //Separate tx/rx Buffers                
+      txHead  = &(vars._txHead);
+      txTail  = &(vars._txTail); 
+      txBuffer = vars._txBuffer;
+    #endif
+  }  
     
   /* Put byte in txBuffer */
   nextHead = TWI_advancePosition(*txHead);
@@ -424,22 +440,31 @@ int TwoWire::read(void) {
   uint8_t* rxTail;
   uint8_t* rxBuffer;
   
-#if defined (TWI_MANDS)                         //Alias handler
-  if (vars._bools._toggleStreamFn == 0x01) {  
-    rxHead  = &(vars._rxHeadS);
-    rxTail  = &(vars._rxTailS);
-    rxBuffer = vars._rxBufferS;
-  }
-  else {
-    rxHead  = &(vars._rxHead);
-    rxTail  = &(vars._rxTail); 
-    rxBuffer = vars._rxBuffer;
-  }
-#else
-    rxHead  = &(vars._rxHead);
-    rxTail  = &(vars._rxTail); 
-    rxBuffer = vars._rxBuffer;
-#endif 
+  #if defined (TWI_MANDS)                           //Add following if master and slave are split
+    if (vars._bools._toggleStreamFn == 0x01) {  
+      #if defined (TWI_MERGE_BUFFERS)                 //Same Buffers for tx/rx                 
+        rxHead  = &(vars._trHeadS);                 
+        rxTail  = &(vars._trTailS);   
+        rxBuffer = vars._trBufferS;
+      #else                                           //Separate tx/rx Buffers                       
+        rxHead  = &(vars._rxHeadS);                 
+        rxTail  = &(vars._rxTailS);   
+        rxBuffer = vars._rxBufferS;
+      #endif
+    }
+    else
+  #endif 
+  {
+    #if defined (TWI_MERGE_BUFFERS)               //Same Buffers for tx/rx                
+      rxHead  = &(vars._trHead);
+      rxTail  = &(vars._trTail); 
+      rxBuffer = vars._trBuffer;
+    #else                                         //Separate tx/rx Buffers                     
+      rxHead  = &(vars._rxHead);
+      rxTail  = &(vars._rxTail); 
+      rxBuffer = vars._rxBuffer;
+    #endif
+  }  
   
   
   if ((*rxHead) == (*rxTail)) { // if the head isn't ahead of the tail, we don't have any characters
@@ -471,23 +496,32 @@ int TwoWire::peek(void) {
   uint8_t* rxTail;
   uint8_t* rxBuffer;
   
-#if defined (TWI_MANDS)                         //Alias handler
-  if (vars._bools._toggleStreamFn == 0x01) {  
-    rxHead  = &(vars._rxHeadS);
-    rxTail  = &(vars._rxTailS);
-    rxBuffer = vars._rxBufferS;
-  }
-  else {
-    rxHead  = &(vars._rxHead);
-    rxTail  = &(vars._rxTail); 
-    rxBuffer = vars._rxBuffer;
-  }
-#else
-    rxHead  = &(vars._rxHead);
-    rxTail  = &(vars._rxTail); 
-    rxBuffer = vars._rxBuffer;
-#endif 
-
+  #if defined (TWI_MANDS)                           //Add following if master and slave are split
+    if (vars._bools._toggleStreamFn == 0x01) {  
+      #if defined (TWI_MERGE_BUFFERS)                 //Separate tx/rx Buffers                    
+        rxHead  = &(vars._trHeadS);                 
+        rxTail  = &(vars._trTailS);   
+        rxBuffer = vars._trBufferS;
+      #else                                           //Same Buffers for tx/rx                   
+        rxHead  = &(vars._rxHeadS);                 
+        rxTail  = &(vars._rxTailS);   
+        rxBuffer = vars._rxBufferS;
+      #endif
+    }
+    else
+  #endif 
+  {
+    #if defined (TWI_MERGE_BUFFERS)               //Same Buffers for tx/rx                   
+      rxHead  = &(vars._trHead);
+      rxTail  = &(vars._trTail); 
+      rxBuffer = vars._trBuffer;
+    #else                                         //Separate tx/rx Buffers                   
+      rxHead  = &(vars._rxHead);
+      rxTail  = &(vars._rxTail); 
+      rxBuffer = vars._rxBuffer;
+    #endif
+  }  
+  
   if ((*rxHead) == (*rxTail)) {return -1;} 
   else                        {return rxBuffer[(*rxTail)];}
 }
@@ -501,11 +535,18 @@ int TwoWire::peek(void) {
  *@return     void
  */
 void TwoWire::flush(void) {
-  vars._rxTail = vars._rxHead;
-  vars._txHead = vars._txHead;
-  #if defined (TWI_MANDS)
-    vars._rxTailS = vars._rxHeadS;
-    vars._txHeadS = vars._txHeadS;                               
+  #if defined (TWI_MERGE_BUFFERS)               //merged tx/rx Buffers
+    vars._trTail = vars._trHead;
+    #if defined (TWI_MANDS)
+      vars._trTailS = vars._trHeadS;
+    #endif
+  #else
+    vars._rxTail = vars._rxHead;
+    vars._txTail = vars._txHead;
+    #if defined (TWI_MANDS)
+      vars._rxTailS = vars._rxHeadS;
+      vars._txTailS = vars._txHeadS;                               
+    #endif
   #endif
   
   /* Turn off and on TWI module */

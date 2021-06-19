@@ -36,9 +36,10 @@ SOFTWARE.
   #define ADD_WRITE_BIT(address)   (address & ~0x01)
 #endif
 
-//#define USING_WIRE1    //On devices with two TWIs, this identifies if the user wants to use Wire1
-//#define TWI_DUALCTRL   //This identifies if the device supports dual mode, where slave pins are different from the master pins
-//#define TWI_MANDS      //This enables the simultaneous use of the Master and Slave functionality - where supported
+#define USING_WIRE1    //On devices with two TWIs, this identifies if the user wants to use Wire1
+#define TWI_DUALCTRL   //This identifies if the device supports dual mode, where slave pins are different from the master pins
+#define TWI_MANDS      //This enables the simultaneous use of the Master and Slave functionality - where supported
+//#define TWI_MERGE_BUFFERS //When defined, uses only one buffer for tx and rx    //this define is rather experimental and should not be used unless you **really** need the extra RAM
 
 #ifndef BUFFER_LENGTH
   #if (RAMSIZE < 256)          /* Parts with 128b of RAM wince at pair of 16k buffers         */
@@ -73,32 +74,51 @@ struct twiDataBools {          //using a struct so the compiler can use skip if 
 struct twiData {                  
   TWI_t *_module;                 
   
-  uint8_t _slaveAddress;          
-  uint8_t _txHead;                
-  uint8_t _txTail;                    
-  uint8_t _rxHead;
-  uint8_t _rxTail;
+  struct twiDataBools _bools;      //the structure to hold the bools for the class
   
-   
-  #if defined (TWI_MANDS)
-    uint8_t _incomingAddress;        
-    uint8_t _txHeadS;                    
-    uint8_t _txTailS;                    
-    uint8_t _rxHeadS;
-    uint8_t _rxTailS;
+  uint8_t _slaveAddress;  
+  #if defined (TWI_MERGE_BUFFERS)  
+    uint8_t _trHead;
+    uint8_t _trTail;
+  #else
+    uint8_t _txHead;                
+    uint8_t _txTail;                    
+    uint8_t _rxHead;
+    uint8_t _rxTail;
   #endif
-   
-  struct twiDataBools _bools;      //a structure to hold some bools
+  
+  #if defined (TWI_MANDS)
+    uint8_t _incomingAddress;  
+    #if defined (TWI_MERGE_BUFFERS)  
+      uint8_t _trHeadS;
+      uint8_t _trTailS;
+    #else
+      uint8_t _trHeadS;
+      uint8_t _trTailS;
+      uint8_t _txHeadS;                    
+      uint8_t _txTailS;                    
+      uint8_t _rxHeadS;
+      uint8_t _rxTailS;
+    #endif
+  #endif
    
   void (*user_onRequest)(void);      
   void (*user_onReceive)(int);    
-   
-  uint8_t _txBuffer[BUFFER_LENGTH];
-  uint8_t _rxBuffer[BUFFER_LENGTH];
+  
+  #if defined (TWI_MERGE_BUFFERS)
+    uint8_t _trBuffer[BUFFER_LENGTH];
+  #else
+    uint8_t _txBuffer[BUFFER_LENGTH];
+    uint8_t _rxBuffer[BUFFER_LENGTH];
+  #endif
    
   #if defined (TWI_MANDS)        //Putting the arrays in the end because the first 32 bytes can
-    uint8_t _txBufferS[BUFFER_LENGTH];  //be accessed easier and faster
-    uint8_t _rxBufferS[BUFFER_LENGTH];
+    #if defined (TWI_MERGE_BUFFERS)   //be accessed easier and faster
+      uint8_t _trBufferS[BUFFER_LENGTH];
+    #else
+      uint8_t _txBufferS[BUFFER_LENGTH];  
+      uint8_t _rxBufferS[BUFFER_LENGTH];
+    #endif
   #endif
 };
 
