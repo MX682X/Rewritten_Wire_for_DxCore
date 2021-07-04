@@ -50,47 +50,48 @@
  *@return             uint8_t
  *@retval             the desired baud value
  */
+ #define TWI_BAUD(freq, t_rise) ((F_CPU / freq) / 2) - (5 + (((F_CPU / 1000000) * t_rise) / 2000))
 uint8_t TWI_MasterCalcBaud(uint32_t frequency) {
-   uint16_t t_rise;
-   int16_t baud;
+  uint16_t t_rise;
+  int16_t baud;
 
-   // The nonlinearity of the frequency coupled with the processor frequency a general offset has been calculated and tested for different frequency bands
-   #if F_CPU > 16000000
-   if (frequency <= 100000) {
-      t_rise = 1000;
-      baud = (F_CPU / (2 * frequency)) - (5 + (((F_CPU / 1000000) * t_rise) / 2000)) + 6; // Offset +6
-   } else if (frequency <= 400000) {
-      t_rise = 300;
-      baud = (F_CPU / (2 * frequency)) - (5 + (((F_CPU / 1000000) * t_rise) / 2000)) + 1; // Offset +1
-   } else if (frequency <= 800000) {
-      t_rise = 120;
-      baud = (F_CPU / (2 * frequency)) - (5 + (((F_CPU / 1000000) * t_rise) / 2000));
-   } else {
-      t_rise = 120;
-      baud = (F_CPU / (2 * frequency)) - (5 + (((F_CPU / 1000000) * t_rise) / 2000)) - 1; // Offset -1
-   }
-   #else
-   if (frequency <= 100000) {
-      t_rise = 1000;
-      baud = (F_CPU / (2 * frequency)) - (5 + (((F_CPU / 1000000) * t_rise) / 2000)) + 8; // Offset +8
-   } else if (frequency <= 400000) {
-      t_rise = 300;
-      baud = (F_CPU / (2 * frequency)) - (5 + (((F_CPU / 1000000) * t_rise) / 2000)) + 1; // Offset +1
-   } else if (frequency <= 800000) {
-      t_rise = 120;
-      baud = (F_CPU / (2 * frequency)) - (5 + (((F_CPU / 1000000) * t_rise) / 2000));
-   } else {
-      t_rise = 120;
-      baud = (F_CPU / (2 * frequency)) - (5 + (((F_CPU / 1000000) * t_rise) / 2000)) - 1; // Offset -1
-   }
-   #endif
-
-   if (baud < 1) {
-      baud = 1;
-   } else if (baud > 255) {
-      baud = 255;
-   }
-   return baud;  
+  // The nonlinearity of the frequency coupled with the processor frequency a general offset has been calculated and tested for different frequency bands
+  #if F_CPU > 16000000
+  if (frequency <= 100000) {
+    t_rise = 1000;
+    baud = TWI_BAUD(frequency, t_rise) + 6; // Offset +6
+  } else if (frequency <= 400000) {
+    t_rise = 300;
+    baud = TWI_BAUD(frequency, t_rise) + 1; // Offset +1
+  } else if (frequency <= 800000) {
+    t_rise = 120;
+    baud = TWI_BAUD(frequency, t_rise);
+  } else {
+    t_rise = 120;
+    baud = TWI_BAUD(frequency, t_rise) - 1; // Offset -1
+  }
+  #else
+  if (frequency <= 100000) {
+    t_rise = 1000;
+    baud = TWI_BAUD(frequency, t_rise) + 8; // Offset +8
+  } else if (frequency <= 400000) {
+    t_rise = 300;
+    baud = TWI_BAUD(frequency, t_rise) + 1; // Offset +1
+  } else if (frequency <= 800000) {
+    t_rise = 120;
+    baud = TWI_BAUD(frequency, t_rise);
+  } else {
+    t_rise = 120;
+    baud = TWI_BAUD(frequency, t_rise) 1; // Offset -1
+  }
+  #endif
+  
+  if (baud < 1) {
+    baud = 1;
+  } else if (baud > 255) {
+    baud = 255;
+  }
+  return (uint8_t)baud;  
 }
 
 
