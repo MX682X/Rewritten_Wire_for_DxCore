@@ -39,7 +39,10 @@ SOFTWARE.
 #define USING_WIRE1    //On devices with two TWIs, this identifies if the user wants to use Wire1
 #define TWI_DUALCTRL   //This identifies if the device supports dual mode, where slave pins are different from the master pins
 #define TWI_MANDS      //This enables the simultaneous use of the Master and Slave functionality - where supported
-//#define TWI_MERGE_BUFFERS //When defined, uses only one buffer for tx and rx    //this define is rather experimental and should not be used unless you **really** need the extra RAM
+//#define TWI_MERGE_BUFFERS //Merges the tx and rx buffers - this option will break the TWI when any rx occurs between beginTransmission and endTransmission!
+                            //It is not advised to use this define. Only use this when you need the RAM **really** badly
+
+
 
 #ifndef BUFFER_LENGTH
   #if (RAMSIZE < 256)          /* Parts with 128b of RAM wince at pair of 16k buffers         */
@@ -57,7 +60,7 @@ SOFTWARE.
 #endif
 
 struct twiDataBools {          //using a struct so the compiler can use skip if bit is set/cleared
-  uint8_t reserved:4;          //reserved for Future use
+  uint8_t reserved:4;          //reserved for Future use, maybe error codes?
   bool _toggleStreamFn:1;     //used to toggle between Slave and Master elements when TWI_MANDS defined
   bool _masterEnabled:1;
   bool _slaveEnabled:1;
