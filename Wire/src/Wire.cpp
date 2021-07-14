@@ -22,7 +22,7 @@
   This version is part of megaTinyCore and DxCore; it is not expected
   to work with other hardware or cores without modifications.
   Modified 2021 by MX682X for megaTinyCore and DxCore. 
-  Added Support for Simultanious master/slave, dual mode and Wire1.
+  Added Support for Simultaneous master/slave, dual mode and Wire1.
 */
 
 extern "C" {

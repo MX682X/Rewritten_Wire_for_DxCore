@@ -19,7 +19,7 @@
   Modified 2012 by Todd Krein (todd@krein.org) to implement repeated starts
 
   Modified 2021 by MX682X for megaTinyCore and DxCore. 
-  Added Support for Simultanious master/slave, dual mode and Wire1.
+  Added Support for Simultaneous master/slave, dual mode and Wire1.
 */
 
 

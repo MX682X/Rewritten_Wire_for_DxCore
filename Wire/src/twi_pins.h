@@ -82,7 +82,7 @@ uint8_t TWI_MasterCalcBaud(uint32_t frequency) {
     baud = TWI_BAUD(frequency, t_rise);
   } else {
     t_rise = 120;
-    baud = TWI_BAUD(frequency, t_rise) 1; // Offset -1
+    baud = TWI_BAUD(frequency, t_rise) - 1; // Offset -1
   }
   #endif
   
