@@ -57,6 +57,7 @@ class TwoWire: public Stream {
   private:
     twiData vars;                 //using a struct to reduce the amount of parameters that have to be passed
 
+
   public:
     TwoWire(TWI_t *twi_module);
     bool pins(uint8_t sda_pin, uint8_t scl_pin);
@@ -97,6 +98,7 @@ class TwoWire: public Stream {
     virtual void flush(void);
   
     uint8_t getIncomingAddress(void);
+    void   enableDualMode(bool fmp_enable);      //Moves the Slave to dedicated pins
   
     void onReceive(void (*)(int)); 
     void onRequest(void (*)(void));
@@ -104,12 +106,9 @@ class TwoWire: public Stream {
     inline size_t write(unsigned long n)  {return write((uint8_t)n);}
     inline size_t write(long n)           {return write((uint8_t)n);}
     inline size_t write(unsigned int n)   {return write((uint8_t)n);}
-    inline size_t write(int n)            {return write((uint8_t)n);}
-
-    void   enableDualMode(bool fmp_enable);      //Moves the Slave to dedicated pins
-    
+    inline size_t write(int n)            {return write((uint8_t)n);}    
     using Print::write;  
-
+    
     void    TWI_onReceiveService(int numBytes);
     uint8_t TWI_onRequestService(void);
   
@@ -126,5 +125,5 @@ class TwoWire: public Stream {
   #endif
 #endif
 
-
 #endif
+

@@ -66,12 +66,12 @@ void TWI_MasterInit(struct twiData *_data) {
 
 
 #if defined (TWI1)                //More then one TWI used
-   if      (&TWI0 == _data->_module) {        //check which one this function is working with
-     TWI0_ClearPins();
-   }
-   else if (&TWI1 == _data->_module) {
-     TWI1_ClearPins();
-   }
+  if      (&TWI0 == _data->_module) {        //check which one this function is working with
+    TWI0_ClearPins();
+  }
+  else if (&TWI1 == _data->_module) {
+    TWI1_ClearPins();
+  }
 #else                             //Only one TWI is used
   TWI0_ClearPins();                           //Only one option is possible
 #endif  
@@ -107,29 +107,29 @@ void TWI_SlaveInit(struct twiData *_data, uint8_t address, uint8_t receive_broad
   }
 #else                             //Master or Slave
   if (_data->_bools._masterEnabled == 1 ||  //If Master was enabled
-    _data->_bools._slaveEnabled == 1) {     //or Slave was enabled
-    return;                       //return and do nothing
-}
+      _data->_bools._slaveEnabled == 1) {     //or Slave was enabled
+  return;                       //return and do nothing
+  }
 #endif
 
 #if defined (TWI1)
-   if      (&TWI0 == _data->_module) {
-     TWI0_ClearPins();
-   }
-   else if (&TWI1 == _data->_module) {
-     TWI1_ClearPins();
-   }
+  if (&TWI0 == _data->_module) {
+    TWI0_ClearPins();
+  }
+  else if (&TWI1 == _data->_module) {
+    TWI1_ClearPins();
+  }
 #else 
   TWI0_ClearPins();
 #endif
    
-   _data->_bools._slaveEnabled = 1;
-   _data->_module->SADDR = address << 1 | receive_broadcast;
-   _data->_module->SADDRMASK = second_address;
-   _data->_module->SCTRLA = TWI_DIEN_bm | TWI_APIEN_bm | TWI_PIEN_bm  | TWI_ENABLE_bm;
+  _data->_bools._slaveEnabled = 1;
+  _data->_module->SADDR = address << 1 | receive_broadcast;
+  _data->_module->SADDRMASK = second_address;
+  _data->_module->SCTRLA = TWI_DIEN_bm | TWI_APIEN_bm | TWI_PIEN_bm  | TWI_ENABLE_bm;
 
-   /* Bus Error Detection circuitry needs Master enabled to work */
-   _data->_module->MCTRLA = TWI_ENABLE_bm;
+  /* Bus Error Detection circuitry needs Master enabled to work */
+  _data->_module->MCTRLA = TWI_ENABLE_bm;
 }
 
 
@@ -143,7 +143,7 @@ void TWI_SlaveInit(struct twiData *_data, uint8_t address, uint8_t receive_broad
  *@return             void
  */
 void TWI_Flush(struct twiData *_data) {
-   _data->_module->MCTRLB |= TWI_FLUSH_bm;
+  _data->_module->MCTRLB |= TWI_FLUSH_bm;
 }
 
 
@@ -157,8 +157,8 @@ void TWI_Flush(struct twiData *_data) {
  *@return     void
  */
 void TWI_Disable(struct twiData *_data) {
-   TWI_DisableMaster(_data);
-   TWI_DisableSlave(_data);
+  TWI_DisableMaster(_data);
+  TWI_DisableSlave(_data);
 }
 
 
@@ -241,7 +241,6 @@ void TWI_MasterSetBaud(struct twiData *_data, uint32_t frequency) {
       }
    }
 }
-
 
 
 /**
@@ -414,9 +413,7 @@ uint8_t TWI_MasterRead(struct twiData *_data, uint8_t bytesToRead, bool send_sto
     //uint8_t* rxTail  = &(_data->_rxTail);
     uint8_t* rxBuffer = _data->_rxBuffer;
   #endif  
-  
-  
-  
+   
   
   uint8_t retVal = 0;
   uint8_t dataRead = 0;
@@ -478,8 +475,6 @@ uint8_t TWI_MasterRead(struct twiData *_data, uint8_t bytesToRead, bool send_sto
 }
 
 
-
-
 /**
  *@brief      TWI_RegisterSlaveISRcallback is used to save the callback to the onSlaveIRQ() function
  *  
@@ -516,7 +511,6 @@ void TWI_RegisterSlaveISRcallback(void (*function)(TWI_t *module)) {
 void TWI_SlaveInterruptHandler(TWI_t *module) {
     if (NULL != TWI_onSlaveISR) TWI_onSlaveISR(module);
 }
-
 
 
 /**
@@ -756,6 +750,7 @@ void NotifyUser_onReceive(struct twiData *_data) {
     #endif
   }
 }
+ 
  
 /**
  *@brief      TWI_advancePosition increments the given number if it smaller then the BUFFER_LENGTH value

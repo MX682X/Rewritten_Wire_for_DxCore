@@ -45,6 +45,7 @@ extern "C" {    //compiler was complaining when I put twi.h into the upper C inc
   #define DEFAULT_FREQUENCY 100000
 #endif
 
+
 // Initialize Class Variables //////////////////////////////////////////////////
 
 // Constructors ////////////////////////////////////////////////////////////////
@@ -53,7 +54,7 @@ extern "C" {    //compiler was complaining when I put twi.h into the upper C inc
  *
  *@param      TWI_t *module - the pointer to the TWI module that the Wire object is supposed to use
  *
- *@return     constructor has can't return anything
+ *@return     constructor can't return anything
  */     
 TwoWire::TwoWire(TWI_t *twi_module) {  
   vars._module = twi_module;
@@ -102,6 +103,25 @@ bool TwoWire::swap(uint8_t state) {
   #endif
 }
 
+/**
+ *@brief      usePullups enables the PULL-UP on the TWI pins.    
+ *            
+ *            This function is using the PORTMUX value, so use it after swap()!
+ *            
+ *
+ *@param      void
+ *
+ *@return     void   
+ */
+void TwoWire::usePullups(void) {
+  #if defined (TWI1)
+    if      (&TWI0 == vars._module) {TWI0_usePullups();}
+    else if (&TWI1 == vars._module) {TWI1_usePullups();}
+  #else
+    TWI0_usePullups();
+  #endif
+}
+
 
 /**
  *@brief      swapModule changes the TWI module if only one Wire object is used    
@@ -130,27 +150,6 @@ bool TwoWire::swapModule(TWI_t *twi_module) {
   #endif
   return false;
 }
-
-
-/**
- *@brief      usePullups enables the PULL-UP on the TWI pins.    
- *            
- *            This function is using the PORTMUX value, so use it after swap()!
- *            
- *
- *@param      void
- *
- *@return     void   
- */
-void TwoWire::usePullups(void) {
-  #if defined (TWI1)
-    if      (&TWI0 == vars._module) {TWI0_usePullups();}
-    else if (&TWI1 == vars._module) {TWI1_usePullups();}
-  #else
-    TWI0_usePullups();
-  #endif
-}
-
 
 
 /**
@@ -614,12 +613,10 @@ void TwoWire::onSlaveIRQ(TWI_t *module){                 //This function is stat
 
 #if defined (TWI1)                                       //Two TWIs avaialble
    #if defined (USING_WIRE1)                             //User wants to use Wire and Wire1. Need to check the interface
-      if      (module == &TWI0)     
-      {
+      if      (module == &TWI0) {
          TWI_HandleSlaveIRQ(&(Wire.vars));
       }
-      else if (module == &TWI1)                
-      {
+      else if (module == &TWI1) {
          TWI_HandleSlaveIRQ(&(Wire1.vars));
       }  
    #else                                                 //User uses only Wire but can use TWI0 and TWI1
@@ -663,6 +660,7 @@ void TwoWire::onRequest(void (*function)(void)) {
 
 
 
+
 /**
  *  Wire object constructors with the default TWI modules. 
  *  If there is absolutely no way to swap the pins physically,
@@ -677,3 +675,6 @@ void TwoWire::onRequest(void (*function)(void)) {
    TwoWire Wire1(&TWI1);
 #endif
 #endif
+
+
+

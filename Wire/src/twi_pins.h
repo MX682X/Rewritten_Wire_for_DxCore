@@ -95,6 +95,8 @@ uint8_t TWI_MasterCalcBaud(uint32_t frequency) {
 }
 
 
+
+
 void TWI0_ClearPins() {
   #ifdef PORTMUX_TWIROUTEA
     if ((PORTMUX.TWIROUTEA & PORTMUX_TWI0_gm) == PORTMUX_TWI0_ALT2_gc) {
@@ -261,14 +263,14 @@ bool TWI0_swap(uint8_t state) {
       #endif
   #elif defined(PORTMUX_TWIROUTEA) /* AVR Dx-series */
     #if defined(PIN_WIRE_SDA_PINSWAP_2) && defined(PIN_WIRE_SCL_PINSWAP_2)
-      if (state == 3) {
+      if (state == 2) {
         // Use pin swap
         PORTMUX.TWIROUTEA = (PORTMUX.TWIROUTEA & ~PORTMUX_TWI0_gm) | 0x02;
         return true;
       } else
     #endif
     #if defined(PIN_WIRE_SDA_PINSWAP_1) && defined(PIN_WIRE_SCL_PINSWAP_1)
-      if (state == 2) {
+      if (state == 1) {
         // Use pin swap
         PORTMUX.TWIROUTEA = (PORTMUX.TWIROUTEA & ~PORTMUX_TWI0_gm) | 0x01;
         return true;

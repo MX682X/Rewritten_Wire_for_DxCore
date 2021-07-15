@@ -96,8 +96,6 @@ struct twiData {
       uint8_t _trHeadS;
       uint8_t _trTailS;
     #else
-      uint8_t _trHeadS;
-      uint8_t _trTailS;
       uint8_t _txHeadS;                    
       uint8_t _txTailS;                    
       uint8_t _rxHeadS;
