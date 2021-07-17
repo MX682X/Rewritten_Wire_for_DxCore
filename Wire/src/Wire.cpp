@@ -34,11 +34,11 @@ extern "C" {
 
 #include "Arduino.h"
 #include "Wire.h"
-#include "twi_pins.h"
 
 
 extern "C" {    //compiler was complaining when I put twi.h into the upper C include part
 #include "twi.h"
+#include "twi_pins.h"
 }
 
 #ifndef DEFAULT_FREQUENCY
