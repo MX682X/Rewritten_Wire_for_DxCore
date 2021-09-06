@@ -369,7 +369,7 @@ atxy7.menu.uartvoltage.5v.build.uartvoltage=5V
 atxy7.menu.uartvoltage.3v.build.uartvoltage=3V
 
 ### TWI OPTIONS
-atxy7.menu.wire.mors=Master or Slave (saves Flash)
+atxy7.menu.wire.mors=Master or Slave (saves Flash & RAM)
 atxy7.menu.wire.mors.build.wire=MORS
 atxy7.menu.wire.mands=Master and Slave
 atxy7.menu.wire.mands.build.wire=MANDS
@@ -670,7 +670,7 @@ atxy6.menu.uartvoltage.3v=Closer to 3v
 atxy6.menu.uartvoltage.5v.build.uartvoltage=5V
 atxy6.menu.uartvoltage.3v.build.uartvoltage=3V
 ### TWI OPTIONS
-atxy6.menu.wire.mors=Master or Slave (saves Flash)
+atxy6.menu.wire.mors=Master or Slave (saves Flash & RAM)
 atxy6.menu.wire.mors.build.wire=MORS
 atxy6.menu.wire.mands=Master and Slave
 atxy6.menu.wire.mands.build.wire=MANDS
@@ -975,7 +975,7 @@ atxy4.menu.uartvoltage.3v=Closer to 3v
 atxy4.menu.uartvoltage.5v.build.uartvoltage=5V
 atxy4.menu.uartvoltage.3v.build.uartvoltage=3V
 ### TWI OPTIONS
-atxy4.menu.wire.mors=Master or Slave (saves Flash)
+atxy4.menu.wire.mors=Master or Slave (saves Flash & RAM)
 atxy4.menu.wire.mors.build.wire=MORS
 atxy4.menu.wire.mands=Master and Slave
 atxy4.menu.wire.mands.build.wire=MANDS
@@ -1498,7 +1498,7 @@ microchip.menu.uartvoltage.5v.build.uartvoltage=5V
 microchip.menu.uartvoltage.3v.build.uartvoltage=3V
 
 ### TWI OPTIONS
-microchip.menu.wire.mors=Master or Slave (saves Flash)
+microchip.menu.wire.mors=Master or Slave (saves Flash & RAM)
 microchip.menu.wire.mors.build.wire=MORS
 microchip.menu.wire.mands=Master and Slave
 microchip.menu.wire.mands.build.wire=MANDS
@@ -1780,7 +1780,7 @@ atxy7o.menu.bootloaderuart.default.bootloader.uartswap=
 atxy7o.menu.bootloaderuart.alternate.bootloader.uartswap=_alt
 
 ### TWI OPTIONS
-atxy7o.menu.wire.mors=Master or Slave (saves Flash)
+atxy7o.menu.wire.mors=Master or Slave (saves Flash & RAM)
 atxy7o.menu.wire.mors.build.wire=MORS
 atxy7o.menu.wire.mands=Master and Slave
 atxy7o.menu.wire.mands.build.wire=MANDS
@@ -2035,7 +2035,7 @@ atx27o.menu.bootloaderuart.alternate.bootloader.uartswap=_alt
 atx27o.menu.bootloaderuart.alternate1.bootloader.uartswap=_u1alt
 
 ### TWI OPTIONS
-atx27o.menu.wire.mors=Master or Slave (saves Flash)
+atx27o.menu.wire.mors=Master or Slave (saves Flash & RAM)
 atx27o.menu.wire.mors.build.wire=MORS
 atx27o.menu.wire.mands=Master and Slave
 atx27o.menu.wire.mands.build.wire=MANDS
@@ -2308,7 +2308,7 @@ atxy6o.menu.bootloaderuart.default.bootloader.uartswap=
 atxy6o.menu.bootloaderuart.alternate.bootloader.uartswap=_alt
 
 ### TWI OPTIONS
-atxy6o.menu.wire.mors=Master or Slave (saves Flash)
+atxy6o.menu.wire.mors=Master or Slave (saves Flash & RAM)
 atxy6o.menu.wire.mors.build.wire=MORS
 atxy6o.menu.wire.mands=Master and Slave
 atxy6o.menu.wire.mands.build.wire=MANDS
@@ -2562,7 +2562,7 @@ atx26o.menu.bootloaderuart.alternate.bootloader.uartswap=_alt
 atx26o.menu.bootloaderuart.alternate1.bootloader.uartswap=_u1alt
 
 ### TWI OPTIONS
-atx26o.menu.wire.mors=Master or Slave (saves Flash)
+atx26o.menu.wire.mors=Master or Slave (saves Flash & RAM)
 atx26o.menu.wire.mors.build.wire=MORS
 atx26o.menu.wire.mands=Master and Slave
 atx26o.menu.wire.mands.build.wire=MANDS
@@ -2846,7 +2846,7 @@ atxy4o.menu.startuptimeopti.32.bootloader.SYSCFG1=0x06
 atxy4o.menu.startuptimeopti.64.bootloader.SYSCFG1=0x07
 
 ### TWI OPTIONS
-atxy4o.menu.wire.mors=Master or Slave (saves Flash)
+atxy4o.menu.wire.mors=Master or Slave (saves Flash & RAM)
 atxy4o.menu.wire.mors.build.wire=MORS
 atxy4o.menu.wire.mands=Master and Slave
 atxy4o.menu.wire.mands.build.wire=MANDS
@@ -3102,7 +3102,7 @@ atx24o.menu.bootloaderuart.default.bootloader.uartswap=
 atx24o.menu.bootloaderuart.alternate.bootloader.uartswap=_alt
 
 ### TWI OPTIONS
-atx24o.menu.wire.mors=Master or Slave (saves Flash)
+atx24o.menu.wire.mors=Master or Slave (saves Flash & RAM)
 atx24o.menu.wire.mors.build.wire=MORS
 atx24o.menu.wire.mands=Master and Slave
 atx24o.menu.wire.mands.build.wire=MANDS
@@ -3619,7 +3619,7 @@ microchipo.menu.uartvoltage.5v.build.uartvoltage=5V
 microchipo.menu.uartvoltage.3v.build.uartvoltage=3V
 
 ### TWI OPTIONS
-microchipo.menu.wire.mors=Master or Slave (saves Flash)
+microchipo.menu.wire.mors=Master or Slave (saves Flash & RAM)
 microchipo.menu.wire.mors.build.wire=MORS
 microchipo.menu.wire.mands=Master and Slave
 microchipo.menu.wire.mands.build.wire=MANDS

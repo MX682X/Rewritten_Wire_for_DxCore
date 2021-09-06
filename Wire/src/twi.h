@@ -42,6 +42,11 @@ SOFTWARE.
 //#define TWI_MERGE_BUFFERS //Merges the tx and rx buffers - this option will break the TWI when any rx occurs between beginTransmission and endTransmission!
                             //It is not advised to use this define. Only use this when you need the RAM **really** badly
 
+#if defined(ARDUINO_AVR_ATtiny202) || defined (ARDUINO_AVR_ATtiny402)
+  #if defined (TWI_MANDS) //202 and 402 do not support independent master and slave.
+    #undef TWI_MANDS
+  #endif
+#endif
 
 
 #ifndef BUFFER_LENGTH
