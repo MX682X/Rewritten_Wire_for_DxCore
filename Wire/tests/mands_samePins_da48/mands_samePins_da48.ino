@@ -65,7 +65,6 @@ void loop() {
 	   Wire1.endTransmission(1);
 	   wire1_len = 0;
    }
-   
 
 }
 

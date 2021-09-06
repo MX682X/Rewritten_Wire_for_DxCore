@@ -1,8 +1,11 @@
-
 #include "Arduino.h"
 #include "SoftwareSerial.h"
 #include "SPI.h"
 #include "Wire.h"
+
+//This sketch was made to test the dual mode functionality where the
+//TWI pins for master and slave are separated. This code was tested
+//on a AVR128DA48
 
 void rxFunction(int numBytes);
 void txFunction(void);

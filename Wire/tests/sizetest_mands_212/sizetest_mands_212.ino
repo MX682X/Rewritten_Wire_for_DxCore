@@ -2,6 +2,15 @@
 #include <avr/sleep.h>
 
 
+//This example was intended to demonstrate that it is possible to run
+//a master and slave (MANDS) configuration on just 2kB Flash.
+//This example uses the Periodic Interrupt Timer (PIT) to send
+//an averaged ADC value to another device.
+//But, if there is a write on address 0x1A with the data 0x04,
+//an ADC measurement on another pin is made that can be read out
+//by issuing a read on address 0x1A.
+
+
 volatile uint8_t slaveRXflag;
 volatile uint8_t rtc_flag;
 uint8_t adc_cnt;
@@ -17,8 +26,6 @@ void setup() {
    Wire.onRequest(request);
    Wire.onReceive(receive);
 
-   //set_sleep_mode(SLEEP_MODE_PWR_DOWN);
-   //sleep_enable();
 }
 
 void loop() {
@@ -37,7 +44,7 @@ void loop() {
       }
       rtc_flag = 0;
    }
-   //sleep_cpu();
+
 }
 
 
