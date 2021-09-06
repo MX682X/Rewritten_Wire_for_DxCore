@@ -36,9 +36,9 @@ SOFTWARE.
   #define ADD_WRITE_BIT(address)   (address & ~0x01)
 #endif
 
-#define USING_WIRE1    //On devices with two TWIs, this identifies if the user wants to use Wire1
-#define TWI_DUALCTRL   //This identifies if the device supports dual mode, where slave pins are different from the master pins
-#define TWI_MANDS      //This enables the simultaneous use of the Master and Slave functionality - where supported
+//#define USING_WIRE1    //On devices with two TWIs, this identifies if the user wants to use Wire1
+//#define TWI_DUALCTRL   //This identifies if the device supports dual mode, where slave pins are different from the master pins
+//#define TWI_MANDS      //This enables the simultaneous use of the Master and Slave functionality - where supported
 //#define TWI_MERGE_BUFFERS //Merges the tx and rx buffers - this option will break the TWI when any rx occurs between beginTransmission and endTransmission!
                             //It is not advised to use this define. Only use this when you need the RAM **really** badly
 
