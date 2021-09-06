@@ -139,7 +139,7 @@ bool TwoWire::swapModule(TWI_t *twi_module) {
     #if defined (USING_TWI1)
       badCall("swapModule() can only be used if TWI1 is not used");
     #else
-      if (vars._module->MCTRLA == 0) {   //slave and master inits enable MCTRLA, so just check for that
+      if (vars._module->MCTRLA == 0) {   //slave and master initialisations enable MCTRLA, so just check for that
         vars._module = twi_module;
         return true;         //Success
       }
@@ -181,7 +181,7 @@ void TwoWire::begin(void) {
  */
 void TwoWire::begin(uint8_t address, bool receive_broadcast, uint8_t second_address) {
   TWI_SlaveInit(&vars, address, receive_broadcast, second_address);
-  TWI_RegisterSlaveISRcallback(onSlaveIRQ);                          //give the C part of the programm a pointer to call back to.
+  TWI_RegisterSlaveISRcallback(onSlaveIRQ);                          //give the C part of the program a pointer to call back to.
 }
 
 

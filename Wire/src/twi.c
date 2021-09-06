@@ -516,7 +516,7 @@ void TWI_SlaveInterruptHandler(TWI_t *module) {
 /**
  *@brief      TWI_HandleSlaveIRQ checks the status register and decides the next action based on that
  *
- *            Ok, so this function is a bit trickier. Apparently, the status register is not reset on
+ *            OK, so this function is a bit trickier. Apparently, the status register is not reset on
  *            every START condition so every of the 6 general states has multiple possible values. Also,
  *            the RXACK bit stays after every completed master READ (which terminates with a NACK), so
  *            I had to make sure to only check the NACK after a master READ command arrived.
