@@ -27,7 +27,7 @@ void loop() {
       slaveRXflag = 0;
    }
    if (rtc_flag != 0) {
-      adc_avg += analogRead(PIN_PA6); 
+      adc_avg += analogRead(PIN_PA6);
       adc_cnt++;
       if (adc_cnt > 9) {
          adc_avg /= 10;
@@ -44,7 +44,7 @@ void loop() {
 void RTC_init(void) {
   /* Initialize RTC: */
   while (RTC.STATUS > 0) {}               /* Wait for all register to be synchronized */
-  
+
    RTC.CLKSEL = RTC_CLKSEL_INT32K_gc;    /* 32.768kHz Internal Ultra-Low-Power Oscillator (OSCULP32K) */
 
    RTC.PITINTCTRL = RTC_PI_bm;           /* PIT Interrupt: enabled */

@@ -26,7 +26,7 @@ void loop() {
       Wire.endTransmission(true);
       wire0_len = 0;
    }
-   
+
    if (wire1_len > 0)
    {
       Wire.beginTransmission(0x40);
@@ -53,7 +53,7 @@ void rxFunction(int numBytes)
       }
       wire0_len = i;
    }
-   
+
    else if (Wire.getIncomingAddress() == (0x30 << 1))    //Data from Wire1
    {
       uint8_t i = 0;
@@ -63,5 +63,5 @@ void rxFunction(int numBytes)
       }
       wire1_len = i;
    }
-   
+
 }

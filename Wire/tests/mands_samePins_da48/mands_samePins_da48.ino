@@ -28,7 +28,7 @@ void setup() {
 
 	//Wire.onReceive(rxFunction);
 	Wire1.onReceive(rxFunction1);
-   
+
 }
 
 void loop() {
@@ -47,7 +47,7 @@ void loop() {
       Wire.beginTransmission(0x10);
       Wire.write(wire0_data, wire0_len);
       Wire.endTransmission(1);
-	  
+
       wire0_len = 0;
       //Wire.requestFrom(0xAA, len, true);
 	  //Serial1.print("WM0RX: ");
@@ -57,7 +57,7 @@ void loop() {
 		//}
 	Serial1.println();
    }
-   
+
    if (wire1_len > 0)
    {
 	   Wire1.beginTransmission(0x40);

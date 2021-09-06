@@ -19,14 +19,14 @@ uint8_t wire1_len = 0;
 
 void setup() {
    // put your setup code here, to run once:
-      
+
    PORTF.PIN2CTRL |= PORT_PULLUPEN_bm;
    PORTF.PIN3CTRL |= PORT_PULLUPEN_bm;
-	  
+
    Wire.enableDualMode(false);
    Wire.begin();
    Wire.begin(0x40);
-   
+
    Wire1.enableDualMode(false);
    Wire1.begin();
    Wire1.begin(0x20);
@@ -35,7 +35,7 @@ void setup() {
 
 	Wire.onReceive(rxFunction);
 	Wire1.onReceive(rxFunction1);
-   
+
 }
 
 void loop() {
@@ -54,7 +54,7 @@ void loop() {
       Wire.beginTransmission(0x10);
       Wire.write(wire0_data, wire0_len);
       Wire.endTransmission(1);
-	  
+
       wire0_len = 0;
       //Wire.requestFrom(0xAA, len, true);
 	  //Serial1.print("WM0RX: ");
@@ -64,7 +64,7 @@ void loop() {
 		//}
 	Serial1.println();
    }
-   
+
    if (wire1_len > 0)
    {
 	   Wire1.beginTransmission(0x40);
@@ -73,7 +73,7 @@ void loop() {
 	   Wire1.endTransmission(1);
 	   wire1_len = 0;
    }
-   
+
 
 }
 
