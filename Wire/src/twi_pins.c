@@ -23,12 +23,7 @@
   to work with other hardware or cores without modifications.
   Modified 2021 by MX682X for the Wire library rewriting project
 */
-
-
-
-
-
-
+// *INDENT-OFF*   astyle wants this file to be completely unreadable with no indentation for the many preprocessor conditionals!
 #ifndef TWI_PINS_H
 #define TWI_PINS_H
 
@@ -51,7 +46,7 @@ bool TWI_checkPins(const uint8_t sda_pin, const uint8_t scl_pin);
  *@return             uint8_t
  *@retval             the desired baud value
  */
-  #define TWI_BAUD(freq, t_rise) ((F_CPU / freq) / 2) - (5 + (((F_CPU / 1000000) * t_rise) / 2000))
+#define TWI_BAUD(freq, t_rise) ((F_CPU / freq) / 2) - (5 + (((F_CPU / 1000000) * t_rise) / 2000))
 uint8_t TWI_MasterCalcBaud(uint32_t frequency) {
   uint16_t t_rise;
   int16_t baud;
@@ -98,30 +93,29 @@ uint8_t TWI_MasterCalcBaud(uint32_t frequency) {
 bool TWI_checkPins(const uint8_t sda_pin, const uint8_t scl_pin) {
   if (__builtin_constant_p(sda_pin) && __builtin_constant_p(scl_pin)) {
     if (!(
-      #if defined(PIN_WIRE_SDA) & defined(PIN_WIRE_SCL)
-          ((sda_pin == PIN_WIRE_SDA) &&  (scl_pin == PIN_WIRE_SCL)) ||
+      #if    defined(PIN_WIRE_SDA)            &&     defined(PIN_WIRE_SCL)
+        ((sda_pin == PIN_WIRE_SDA)            && (scl_pin == PIN_WIRE_SCL))            ||
       #endif
-      #if defined(PIN_WIRE_SDA_PINSWAP_1) && defined(PIN_WIRE_SCL_PINSWAP_1)
-          ((sda_pin == PIN_WIRE_SDA_PINSWAP_1) && (scl_pin == PIN_WIRE_SCL_PINSWAP_1)) ||
+      #if    defined(PIN_WIRE_SDA_PINSWAP_1)  &&     defined(PIN_WIRE_SCL_PINSWAP_1)
+        ((sda_pin == PIN_WIRE_SDA_PINSWAP_1)  && (scl_pin == PIN_WIRE_SCL_PINSWAP_1))  ||
       #endif
-      #if defined(PIN_WIRE_SDA_PINSWAP_2) && defined(PIN_WIRE_SCL_PINSWAP_2)
-          ((sda_pin == PIN_WIRE_SDA_PINSWAP_2) && (scl_pin == PIN_WIRE_SCL_PINSWAP_2)) ||
+      #if    defined(PIN_WIRE_SDA_PINSWAP_2)  &&     defined(PIN_WIRE_SCL_PINSWAP_2)
+        ((sda_pin == PIN_WIRE_SDA_PINSWAP_2)  && (scl_pin == PIN_WIRE_SCL_PINSWAP_2))  ||
       #endif
-      #if defined(PIN_WIRE_SDA_PINSWAP_3) && defined(PIN_WIRE_SCL_PINSWAP_3)
-          ((sda_pin == PIN_WIRE_SDA_PINSWAP_3) && (scl_pin == PIN_WIRE_SCL_PINSWAP_3)) ||
+      #if    defined(PIN_WIRE_SDA_PINSWAP_3)  &&     defined(PIN_WIRE_SCL_PINSWAP_3)
+        ((sda_pin == PIN_WIRE_SDA_PINSWAP_3)  && (scl_pin == PIN_WIRE_SCL_PINSWAP_3))  ||
       #endif
-
-      #if defined(PIN_WIRE1_SDA) && defined(PIN_WIRE1_SCL)
-          ((sda_pin == PIN_WIRE1_SDA) && (scl_pin == PIN_WIRE1_SCL)) ||
+      #if    defined(PIN_WIRE1_SDA)           &&     defined(PIN_WIRE1_SCL)
+        ((sda_pin == PIN_WIRE1_SDA)           && (scl_pin == PIN_WIRE1_SCL))           ||
       #endif
-      #if defined(PIN_WIRE1_SDA_PINSWAP_1) && defined(PIN_WIRE1_SCL_PINSWAP_1)
-          ((sda_pin == PIN_WIRE1_SDA_PINSWAP_1) && (scl_pin == PIN_WIRE1_SCL_PINSWAP_1)) ||
+      #if    defined(PIN_WIRE1_SDA_PINSWAP_1) &&     defined(PIN_WIRE1_SCL_PINSWAP_1)
+        ((sda_pin == PIN_WIRE1_SDA_PINSWAP_1) && (scl_pin == PIN_WIRE1_SCL_PINSWAP_1)) ||
       #endif
-      #if defined(PIN_WIRE1_SDA_PINSWAP_2) && defined(PIN_WIRE1_SCL_PINSWAP_2)
-          ((sda_pin == PIN_WIRE1_SDA_PINSWAP_2) && (scl_pin == PIN_WIRE1_SCL_PINSWAP_2)) ||
+      #if    defined(PIN_WIRE1_SDA_PINSWAP_2) &&     defined(PIN_WIRE1_SCL_PINSWAP_2)
+        ((sda_pin == PIN_WIRE1_SDA_PINSWAP_2) && (scl_pin == PIN_WIRE1_SCL_PINSWAP_2)) ||
       #endif
-        false)){  //this false is just there to have something to OR with.
-          #if defined (TWI1)
+        false)) {  //this false is just there to have something to OR with.
+          #if defined(TWI1)
             badArg("Pins passed to Wire(1).pins() known at compile time to be invalid");
           #else
             badArg("Pins passed to Wire.pins() known at compile time to be invalid");
@@ -141,7 +135,7 @@ void TWI0_ClearPins() {
     } else {
       PORTA.OUTCLR = 0x0C; // bits 2 and 3
     }
-    #if defined (TWI_DUALCTRL)
+    #if defined(TWI_DUALCTRL)
       if (TWI0.DUALCTRL & TWI_ENABLE_bm) {
         if ((PORTMUX.TWIROUTEA & PORTMUX_TWI0_gm) == PORTMUX_TWI0_DEFAULT_gc) {
           PORTC.OUTCLR = 0x0C; // bits 2 and 3
@@ -193,41 +187,40 @@ bool TWI0_Pins(uint8_t sda_pin, uint8_t scl_pin) {
         #else /* tinyAVR 0/1 without TWI mux options */
            return (sda_pin == PIN_WIRE_SDA && scl_pin == PIN_WIRE_SCL);
         #endif
-
       #elif defined(PORTMUX_TWIROUTEA)
-      uint8_t portmuxTWI0 = (PORTMUX.TWIROUTEA & ~PORTMUX_TWI0_gm);
-        #if defined(PIN_WIRE_SDA_PINSWAP_3)
+      uint8_t portmuxTWI = (PORTMUX.TWIROUTEA & ~PORTMUX_TWI0_gm);
+        #if      defined(PIN_WIRE_SDA_PINSWAP_3)
           if (sda_pin == PIN_WIRE_SDA_PINSWAP_3 && scl_pin == PIN_WIRE_SCL_PINSWAP_3) {
             // Use pin swap
-            PORTMUX.TWIROUTEA = portmuxTWI0 | PORTMUX_TWI0_ALT3_gc;
+            PORTMUX.TWIROUTEA = portmuxTWI | PORTMUX_TWI0_ALT3_gc;
             return true;
           } else
         #endif
-        #if defined(PIN_WIRE_SDA_PINSWAP_2)
+        #if      defined(PIN_WIRE_SDA_PINSWAP_2)
           if (sda_pin == PIN_WIRE_SDA_PINSWAP_2 && scl_pin == PIN_WIRE_SCL_PINSWAP_2) {
             // Use pin swap
-            PORTMUX.TWIROUTEA = portmuxTWI0 | PORTMUX_TWI0_ALT2_gc;
+            PORTMUX.TWIROUTEA = portmuxTWI | PORTMUX_TWI0_ALT2_gc;
             return true;
           } else
         #endif
-        #if defined(PIN_WIRE_SDA_PINSWAP_1)
+        #if      defined(PIN_WIRE_SDA_PINSWAP_1)
           if (sda_pin == PIN_WIRE_SDA_PINSWAP_1 && scl_pin == PIN_WIRE_SCL_PINSWAP_1) {
             // Use pin swap
-            PORTMUX.TWIROUTEA = portmuxTWI0 | PORTMUX_TWI0_ALT1_gc;
+            PORTMUX.TWIROUTEA = portmuxTWI | PORTMUX_TWI0_ALT1_gc;
             return true;
           } else
         #endif
         #if defined(PIN_WIRE_SDA)
           if (sda_pin == PIN_WIRE_SDA && scl_pin == PIN_WIRE_SCL) {
             // Use default configuration
-            PORTMUX.TWIROUTEA = portmuxTWI0;
+            PORTMUX.TWIROUTEA = portmuxTWI;
             return true;
           } else {
             // Assume default configuration
             #ifdef __AVR_DD__   /* DD with 14 pins has no default pins in the "default" "position! Default to alt=2 */
-              PORTMUX.TWIROUTEA = portmuxTWI0 | PORTMUX_TWI0_ALT2_gc; //Alt2 pins:  PC2, PC3, PC6, PC7
+              PORTMUX.TWIROUTEA = portmuxTWI | PORTMUX_TWI0_ALT2_gc; //Alt2 pins:  PC2, PC3, PC6, PC7
             #else
-              PORTMUX.TWIROUTEA = portmuxTWI0;
+              PORTMUX.TWIROUTEA = portmuxTWI;
             #endif
             return false;
           }
@@ -306,7 +299,7 @@ bool TWI0_swap(uint8_t state) {
       }
     #else
     {
-        // Assume default configuration
+      // Assume default configuration
       PORTMUX.TWIROUTEA = (PORTMUX.TWIROUTEA & ~PORTMUX_TWI0_gm | 0x02);
       return false;
     }
@@ -327,16 +320,16 @@ bool TWI0_swap(uint8_t state) {
 }
 
 
-void TWI0_usePullups(){
+void TWI0_usePullups() {
   // make sure we don't get errata'ed - make sure their bits in the output registers are off!
   #ifdef DXCORE
-      // if ((PORTMUX.TWIROUTEA & PORTMUX_TWI0_gm) == 0x02) {
-      // below achieves same more efficiently, since only the master/slave pins are supported by Wire.h
-      // and those are only ever on PA2/PA3, or PC2/PC3 for PORTMUX.TWIROUTEA & PORTMUX_TWI0_gm == 0x02.
-      // but portToPortStruct takes a port number... and PC is 2 while PA is 0. So PORTMUX.TWIROUTEA& 0x02
-      // is the number that portToPortStruct would want, directly, to get that all important port struct.
-      // Slightly more complicated on DD-series since they added a fourth option to the portmux to help
-      // with the constrained pinout.
+    // if ((PORTMUX.TWIROUTEA & PORTMUX_TWI0_gm) == 0x02) {
+    // below achieves same more efficiently, since only the master/slave pins are supported by Wire.h
+    // and those are only ever on PA2/PA3, or PC2/PC3 for PORTMUX.TWIROUTEA & PORTMUX_TWI0_gm == 0x02.
+    // but portToPortStruct takes a port number... and PC is 2 while PA is 0. So PORTMUX.TWIROUTEA& 0x02
+    // is the number that portToPortStruct would want, directly, to get that all important port struct.
+    // Slightly more complicated on DD-series since they added a fourth option to the portmux to help
+    // with the constrained pinout.
     #ifndef __AVR_DD__
       PORT_t *port = portToPortStruct(PORTMUX.TWIROUTEA & 0x02);
     #else
@@ -348,13 +341,13 @@ void TWI0_usePullups(){
         port->PIN1CTRL |= PORT_PULLUPEN_bm;
       } else {
     #endif
-        port->OUTCLR = 0x0C; //bits 2 and 3
-        port->PIN2CTRL |= PORT_PULLUPEN_bm;
-        port->PIN3CTRL |= PORT_PULLUPEN_bm;
+      port->OUTCLR = 0x0C; //bits 2 and 3
+      port->PIN2CTRL |= PORT_PULLUPEN_bm;
+      port->PIN3CTRL |= PORT_PULLUPEN_bm;
     #ifdef __AVR_DD__
       }
     #endif
-    #if defined (TWI_DUALCTRL)
+    #if defined(TWI_DUALCTRL)
       if (TWI0.DUALCTRL & TWI_ENABLE_bm) {
         if ((PORTMUX.TWIROUTEA & PORTMUX_TWI0_gm)==0) {
           PORTC.OUTCLR = 0x0C; //bits 2 and 3
@@ -390,9 +383,7 @@ void TWI0_usePullups(){
   #endif
 }
 
-
-
-#if defined (TWI1)
+#if defined(TWI1)
 void TWI1_ClearPins() {
   #ifdef PORTMUX_TWIROUTEA
     if ((PORTMUX.TWIROUTEA & PORTMUX_TWI1_gm) == PORTMUX_TWI1_ALT2_gc) {
@@ -402,7 +393,7 @@ void TWI1_ClearPins() {
     } else {
       PORTF.OUTCLR = 0x0C; // bits 2 and 3
     }
-    #if defined (TWI_DUALCTRL)
+    #if defined(TWI_DUALCTRL)
       if (TWI1.DUALCTRL & TWI_ENABLE_bm) {
         if ((PORTMUX.TWIROUTEA & PORTMUX_TWI1_gm) == PORTMUX_TWI1_DEFAULT_gc) {
           PORTB.OUTCLR = 0x0C; // bits 2 and 3
@@ -508,7 +499,7 @@ bool TWI1_swap(uint8_t state) {
 
 
 void TWI1_usePullups() {
-  #if defined (TWI1)
+  #if defined(TWI1)
     uint8_t temp = PORTMUX.TWIROUTEA & PORTMUX_TWI1_gm;
     PORT_t *port = portToPortStruct(temp==8?PB:PF);
     if (temp==3) {
@@ -520,7 +511,7 @@ void TWI1_usePullups() {
       port->PIN2CTRL |= PORT_PULLUPEN_bm;
       port->PIN3CTRL |= PORT_PULLUPEN_bm;
     }
-    #if defined (TWI_DUALCTRL)
+    #if defined(TWI_DUALCTRL)
       if (TWI1.DUALCTRL & TWI_ENABLE_bm) {
         if (temp==0) {
           PORTB.OUTCLR = 0x0C; //bits 2 and 3
