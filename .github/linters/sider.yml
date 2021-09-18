@@ -1,0 +1,4 @@
+linter:
+    cpplint:
+        linelength: 150
+
