@@ -50,6 +50,7 @@ jobs:
       - name: Lint Code Base
         uses: github/super-linter/slim@v4
         env:
+          VALIDATE_CLANG_FORMAT: false
           VALIDATE_ALL_CODEBASE: true
           DEFAULT_BRANCH: linter_test
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
