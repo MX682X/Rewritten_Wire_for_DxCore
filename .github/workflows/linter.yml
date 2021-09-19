@@ -41,7 +41,8 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v2
         with:
-          # Full git history is needed to get a proper list of changed files within `super-linter`
+          # Full git history is needed to get a proper list of
+          # changed files within `super-linter`
           fetch-depth: 0
 
       ################################
@@ -51,8 +52,6 @@ jobs:
         uses: github/super-linter/slim@v4
         env:
           VALIDATE_CPP: true
-          VALIDATE_YAML: true
           VALIDATE_ALL_CODEBASE: true
           DEFAULT_BRANCH: linter_test
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          

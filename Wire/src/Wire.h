@@ -25,10 +25,10 @@
 
 
 
-#ifndef TWOWIRENEW_H
-#define TWOWIRENEW_H
+#ifndef TWOWIRE_NEW_H_
+#define TWOWIRE_NEW_H_
 
-//#include <avr/io.h>
+// #include <avr/io.h>
 #include <Arduino.h>
 
 
@@ -54,12 +54,12 @@ extern "C" {
 
 
 class TwoWire: public Stream {
-  private:
-    twiData vars;                 //using a struct to reduce the amount of parameters that have to be passed
+ private:
+  twiData vars;                 // using a struct to reduce the amount of parameters that have to be passed
 
 
-  public:
-    TwoWire(TWI_t *twi_module);
+ public:
+    explicit TwoWire(TWI_t *twi_module);
     bool pins(uint8_t sda_pin, uint8_t scl_pin);
     bool swap(uint8_t state = 1);
     bool swapModule(TWI_t *twi_module);
@@ -113,7 +113,7 @@ class TwoWire: public Stream {
     virtual void flush(void);
 
     uint8_t getIncomingAddress(void);
-    void   enableDualMode(bool fmp_enable);      //Moves the Slave to dedicated pins
+    void   enableDualMode(bool fmp_enable);      // Moves the Slave to dedicated pins
 
     void onReceive(void (*)(int));
     void onRequest(void (*)(void));
@@ -135,7 +135,7 @@ class TwoWire: public Stream {
     void    TWI_onReceiveService(int numBytes);
     uint8_t TWI_onRequestService(void);
 
-    static void onSlaveIRQ(TWI_t *module);    //is called by the TWI interrupt routines
+    static void onSlaveIRQ(TWI_t *module);    // is called by the TWI interrupt routines
 };
 
 #if defined(TWI0)
@@ -148,4 +148,4 @@ class TwoWire: public Stream {
   #endif
 #endif
 
-#endif
+#endif /* TWOWIRE_NEW_H_ */

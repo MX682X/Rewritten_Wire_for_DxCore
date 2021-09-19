@@ -1,0 +1,6 @@
+---
+BasedOnStyle: GNU
+
+---
+Language: Cpp
+ColumnLimit: 160
