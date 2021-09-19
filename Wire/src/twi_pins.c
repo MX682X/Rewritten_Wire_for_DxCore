@@ -55,30 +55,30 @@ uint8_t TWI_MasterCalcBaud(uint32_t frequency) {
   #if F_CPU > 16000000
   if (frequency <= 100000) {
     t_rise = 1000;
-    baud = TWI_BAUD(frequency, t_rise) + 6; // Offset +6
+    baud = TWI_BAUD(frequency, t_rise) + 6;  // Offset +6
   } else if (frequency <= 400000) {
     t_rise = 300;
-    baud = TWI_BAUD(frequency, t_rise) + 1; // Offset +1
+    baud = TWI_BAUD(frequency, t_rise) + 1;  // Offset +1
   } else if (frequency <= 800000) {
     t_rise = 120;
     baud = TWI_BAUD(frequency, t_rise);
   } else {
     t_rise = 120;
-    baud = TWI_BAUD(frequency, t_rise) - 1; // Offset -1
+    baud = TWI_BAUD(frequency, t_rise) - 1;  // Offset -1
   }
   #else
   if (frequency <= 100000) {
     t_rise = 1000;
-    baud = TWI_BAUD(frequency, t_rise) + 8; // Offset +8
+    baud = TWI_BAUD(frequency, t_rise) + 8;  // Offset +8
   } else if (frequency <= 400000) {
     t_rise = 300;
-    baud = TWI_BAUD(frequency, t_rise) + 1; // Offset +1
+    baud = TWI_BAUD(frequency, t_rise) + 1;  // Offset +1
   } else if (frequency <= 800000) {
     t_rise = 120;
     baud = TWI_BAUD(frequency, t_rise);
   } else {
     t_rise = 120;
-    baud = TWI_BAUD(frequency, t_rise) - 1; // Offset -1
+    baud = TWI_BAUD(frequency, t_rise) - 1;  // Offset -1
   }
   #endif
 
@@ -114,7 +114,7 @@ bool TWI_checkPins(const uint8_t sda_pin, const uint8_t scl_pin) {
       #if    defined(PIN_WIRE1_SDA_PINSWAP_2) &&     defined(PIN_WIRE1_SCL_PINSWAP_2)
         ((sda_pin == PIN_WIRE1_SDA_PINSWAP_2) && (scl_pin == PIN_WIRE1_SCL_PINSWAP_2)) ||
       #endif
-        false)) {  //this false is just there to have something to OR with.
+        false)) {  // this false is just there to have something to OR with. Optimized away by compiler.
           #if defined(TWI1)
             badArg("Pins passed to Wire(1).pins() known at compile time to be invalid");
           #else
@@ -131,32 +131,32 @@ void TWI0_ClearPins() {
     if ((PORTMUX.TWIROUTEA & PORTMUX_TWI0_gm) == PORTMUX_TWI0_ALT2_gc) {
       // make sure we don't get errata'ed - make sure their bits in the
       // PORTx.OUT registers are 0.
-      PORTC.OUTCLR = 0x0C; // bits 2 and 3
+      PORTC.OUTCLR = 0x0C;  // bits 2 and 3
     } else {
-      PORTA.OUTCLR = 0x0C; // bits 2 and 3
+      PORTA.OUTCLR = 0x0C;  // bits 2 and 3
     }
     #if defined(TWI_DUALCTRL)
       if (TWI0.DUALCTRL & TWI_ENABLE_bm) {
         if ((PORTMUX.TWIROUTEA & PORTMUX_TWI0_gm) == PORTMUX_TWI0_DEFAULT_gc) {
-          PORTC.OUTCLR = 0x0C; // bits 2 and 3
+          PORTC.OUTCLR = 0x0C;  // bits 2 and 3
         } else {
-          PORTC.OUTCLR = 0xC0; // bits 6 and 7
+          PORTC.OUTCLR = 0xC0;  // bits 6 and 7
         }
       }
     #endif
-  #else // megaTinyCore
+  #else  // megaTinyCore
     #if defined(PORTMUX_TWI0_bm)
       if ((PORTMUX.CTRLB & PORTMUX_TWI0_bm)) {
         // make sure we don't get errata'ed - make sure their bits in the
         // PORTx.OUT registers are 0.
-        PORTA.OUTCLR = 0x06; // if swapped it's on PA1, PA2
+        PORTA.OUTCLR = 0x06;  // if swapped it's on PA1, PA2
       } else {
-        PORTB.OUTCLR = 0x03; // else PB0, PB1
+        PORTB.OUTCLR = 0x03;  // else PB0, PB1
       }
     #elif defined(__AVR_ATtinyxy2__)
-      PORTA.OUTCLR = 0x06; // 8-pin parts always have it on PA1/2
+      PORTA.OUTCLR = 0x06;  // 8-pin parts always have it on PA1/2
     #else
-      PORTB.OUTCLR = 0x03; // else, zero series, no remapping, it's on PB0, PB1
+      PORTB.OUTCLR = 0x03;  // else, zero series, no remapping, it's on PB0, PB1
   #endif
 #endif
 }
@@ -218,7 +218,7 @@ bool TWI0_Pins(uint8_t sda_pin, uint8_t scl_pin) {
           } else {
             // Assume default configuration
             #ifdef __AVR_DD__   /* DD with 14 pins has no default pins in the "default" "position! Default to alt=2 */
-              PORTMUX.TWIROUTEA = portmuxTWI | PORTMUX_TWI0_ALT2_gc; //Alt2 pins:  PC2, PC3, PC6, PC7
+              PORTMUX.TWIROUTEA = portmuxTWI | PORTMUX_TWI0_ALT2_gc;  // Alt2 pins:  PC2, PC3, PC6, PC7
             #else
               PORTMUX.TWIROUTEA = portmuxTWI;
             #endif
@@ -226,7 +226,7 @@ bool TWI0_Pins(uint8_t sda_pin, uint8_t scl_pin) {
           }
         #endif
       #endif
-    #else // No TWI pin options - why call this?
+    #else  // No TWI pin options - why call this?
       if (__builtin_constant_p(sda_pin) && __builtin_constant_p(scl_pin)) {
         /* constant case - error if there's no swap and the swap attempt is known at compile time */
         if (sda_pin != PIN_WIRE_SDA || scl_pin != PIN_WIRE_SCL) {
@@ -235,7 +235,7 @@ bool TWI0_Pins(uint8_t sda_pin, uint8_t scl_pin) {
         } else {
           return true;
         }
-      } else { /* Non-constant case */
+      } else {  /* Non-constant case */
         return (sda_pin == PIN_WIRE_SDA && scl_pin == PIN_WIRE_SCL);
       }
     #endif
@@ -260,7 +260,7 @@ bool TWI0_swap(uint8_t state) {
         PORTMUX.CTRLB &= ~PORTMUX_TWI0_bm;
         return false;
       }
-    #else //keep compiler happy
+    #else  // keep compiler happy
       if (__builtin_constant_p(state)) {
         if (state != 0) {
           badCall("This part does not support alternate TWI pins. If Wire.swap() is called at all, it must be passed 0 only.");
@@ -334,51 +334,51 @@ void TWI0_usePullups() {
       PORT_t *port = portToPortStruct(PORTMUX.TWIROUTEA & 0x02);
     #else
       uint8_t temp = PORTMUX.TWIROUTEA & PORTMUX_TWI0_gm;
-      PORT_t *port = portToPortStruct(temp==2?PC:PA);
-      if (temp==3) {
-        port->OUTCLR = 0x03; //bits 0 and 1
+      PORT_t *port = portToPortStruct(temp == 2?PC:PA);
+      if (3 == temp) {
+        port->OUTCLR = 0x03;  // bits 0 and 1
         port->PIN0CTRL |= PORT_PULLUPEN_bm;
         port->PIN1CTRL |= PORT_PULLUPEN_bm;
       } else {
     #endif
-      port->OUTCLR = 0x0C; //bits 2 and 3
+      port->OUTCLR = 0x0C;  // bits 2 and 3
       port->PIN2CTRL |= PORT_PULLUPEN_bm;
       port->PIN3CTRL |= PORT_PULLUPEN_bm;
     #ifdef __AVR_DD__
       }
     #endif
     #if defined(TWI_DUALCTRL)
-      if (TWI0.DUALCTRL & TWI_ENABLE_bm) {
-        if ((PORTMUX.TWIROUTEA & PORTMUX_TWI0_gm)==0) {
-          PORTC.OUTCLR = 0x0C; //bits 2 and 3
+      if (true == ((TWI0.DUALCTRL) & TWI_ENABLE_bm)) {
+        if ((PORTMUX.TWIROUTEA & PORTMUX_TWI0_gm) == 0) {
+          PORTC.OUTCLR = 0x0C;  // bits 2 and 3
           PORTC.PIN2CTRL |= PORT_PULLUPEN_bm;
           PORTC.PIN3CTRL |= PORT_PULLUPEN_bm;
         } else {
-          PORTC.OUTCLR = 0xC0; //bits 6 and 7
+          PORTC.OUTCLR = 0xC0;  // bits 6 and 7
           PORTC.PIN6CTRL |= PORT_PULLUPEN_bm;
           PORTC.PIN7CTRL |= PORT_PULLUPEN_bm;
         }
       }
     #endif
-  #else // megaTinyCore
+  #else  // megaTinyCore
     #if defined(PORTMUX_TWI0_bm)
-      if ((PORTMUX.CTRLB & PORTMUX_TWI0_bm)) {
+      if (true == (PORTMUX.CTRLB & PORTMUX_TWI0_bm)) {
         PORTA.PIN2CTRL |= PORT_PULLUPEN_bm;
         PORTA.PIN1CTRL |= PORT_PULLUPEN_bm;
         PORTA.OUTCLR = 0x06;
       } else {
         PORTB.PIN1CTRL |= PORT_PULLUPEN_bm;
         PORTB.PIN0CTRL |= PORT_PULLUPEN_bm;
-        PORTB.OUTCLR = 0x03; //bits 1 and 0.
+        PORTB.OUTCLR = 0x03;  // bits 1 and 0.
       }
     #elif defined(__AVR_ATtinyxy2__)
       PORTA.PIN2CTRL |= PORT_PULLUPEN_bm;
       PORTA.PIN1CTRL |= PORT_PULLUPEN_bm;
-      PORTA.OUTCLR = 0x06; // bits 2 and 1.
+      PORTA.OUTCLR = 0x06;  // bits 2 and 1.
     #else
       PORTB.PIN1CTRL |= PORT_PULLUPEN_bm;
       PORTB.PIN0CTRL |= PORT_PULLUPEN_bm;
-      PORTB.OUTCLR = 0x03; //bits 1 and 0.
+      PORTB.OUTCLR = 0x03;  // bits 1 and 0.
     #endif
   #endif
 }
@@ -389,20 +389,20 @@ void TWI1_ClearPins() {
     if ((PORTMUX.TWIROUTEA & PORTMUX_TWI1_gm) == PORTMUX_TWI1_ALT2_gc) {
       // make sure we don't get errata'ed - make sure their bits in the
       // PORTx.OUT registers are 0.
-      PORTB.OUTCLR = 0x0C; // bits 2 and 3
+      PORTB.OUTCLR = 0x0C;  // bits 2 and 3
     } else {
-      PORTF.OUTCLR = 0x0C; // bits 2 and 3
+      PORTF.OUTCLR = 0x0C;  // bits 2 and 3
     }
     #if defined(TWI_DUALCTRL)
       if (TWI1.DUALCTRL & TWI_ENABLE_bm) {
         if ((PORTMUX.TWIROUTEA & PORTMUX_TWI1_gm) == PORTMUX_TWI1_DEFAULT_gc) {
-          PORTB.OUTCLR = 0x0C; // bits 2 and 3
+          PORTB.OUTCLR = 0x0C;  // bits 2 and 3
         } else {
-          PORTB.OUTCLR = 0xC0; // bits 6 and 7
+          PORTB.OUTCLR = 0xC0;  // bits 6 and 7
         }
       }
     #endif
-  #endif   //Only Dx-Series has 2 TWI
+  #endif   // Only Dx-Series has 2 TWI
 }
 
 
@@ -441,7 +441,7 @@ bool TWI1_Pins(uint8_t sda_pin, uint8_t scl_pin) {
           }
         #endif
       #endif
-    #else // No TWI pin options - why call this?
+    #else  // No TWI pin options - why call this?
       if (__builtin_constant_p(sda_pin) && __builtin_constant_p(scl_pin)) {
         /* constant case - error if there's no swap and the swap attempt is known at compile time */
         if (sda_pin != PIN_WIRE1_SDA || scl_pin != PIN_WIRE1_SCL) {
@@ -501,24 +501,24 @@ bool TWI1_swap(uint8_t state) {
 void TWI1_usePullups() {
   #if defined(TWI1)
     uint8_t temp = PORTMUX.TWIROUTEA & PORTMUX_TWI1_gm;
-    PORT_t *port = portToPortStruct(temp==8?PB:PF);
-    if (temp==3) {
-      port->OUTCLR = 0x03; //bits 0 and 1
+    PORT_t *port = portToPortStruct(temp == 8?PB:PF);
+    if (3 == temp) {
+      port->OUTCLR = 0x03;  // bits 0 and 1
       port->PIN0CTRL |= PORT_PULLUPEN_bm;
       port->PIN1CTRL |= PORT_PULLUPEN_bm;
     } else {
-      port->OUTCLR = 0x0C; //bits 2 and 3
+      port->OUTCLR = 0x0C;  // bits 2 and 3
       port->PIN2CTRL |= PORT_PULLUPEN_bm;
       port->PIN3CTRL |= PORT_PULLUPEN_bm;
     }
     #if defined(TWI_DUALCTRL)
       if (TWI1.DUALCTRL & TWI_ENABLE_bm) {
-        if (temp==0) {
-          PORTB.OUTCLR = 0x0C; //bits 2 and 3
+        if (0 == temp) {
+          PORTB.OUTCLR = 0x0C;  // bits 2 and 3
           PORTB.PIN2CTRL |= PORT_PULLUPEN_bm;
           PORTB.PIN3CTRL |= PORT_PULLUPEN_bm;
         } else {
-          PORTB.OUTCLR = 0xC0; //bits 6 and 7
+          PORTB.OUTCLR = 0xC0;  // bits 6 and 7
           PORTB.PIN6CTRL |= PORT_PULLUPEN_bm;
           PORTB.PIN7CTRL |= PORT_PULLUPEN_bm;
         }

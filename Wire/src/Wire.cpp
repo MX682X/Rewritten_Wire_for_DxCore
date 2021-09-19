@@ -156,7 +156,7 @@ bool TwoWire::swapModule(TWI_t *twi_module) {
     #endif
   #else
     badCall("Only one TWI module available, nothing to switch with");
-    (void)twi_module; // Remove warning unused variable
+    (void)twi_module;   // Remove warning unused variable
   #endif
   return false;
 }
@@ -353,7 +353,6 @@ uint8_t TwoWire::endTransmission(bool sendStop) {
  *@retval     1 if successful, 0 if the buffer is full
  */
 size_t TwoWire::write(uint8_t data) {
-
   uint8_t nextHead;
   uint8_t* txHead;
   uint8_t* txTail;
@@ -388,7 +387,7 @@ size_t TwoWire::write(uint8_t data) {
   nextHead = TWI_advancePosition(*txHead);
 
   if (nextHead == (*txTail)) {
-   return 0;                              // Buffer full, stop accepting data
+    return 0;                             // Buffer full, stop accepting data
   }
   txBuffer[(*txHead)] = data;             // Load data into the buffer
   (*txHead) = nextHead;                   // advancing the head
@@ -410,7 +409,6 @@ size_t TwoWire::write(uint8_t data) {
  *@retval     amount of bytes copied
  */
 size_t TwoWire::write(const uint8_t *data, size_t quantity) {
-
   for (size_t i = 0; i < quantity; i++) {
     write(*(data + i));
   }
@@ -451,7 +449,6 @@ int TwoWire::available(void) {
  *@retval     byte in the buffer or -1 if buffer is empty
  */
 int TwoWire::read(void) {
-
   uint8_t* rxHead;
   uint8_t* rxTail;
   uint8_t* rxBuffer;
@@ -482,8 +479,8 @@ int TwoWire::read(void) {
   }
 
 
-  if ((*rxHead) == (*rxTail)) { // if the head isn't ahead of the tail, we don't have any characters
-    return -1;
+  if ((*rxHead) == (*rxTail)) {   // if the head isn't ahead of the tail,
+    return -1;                    // we don't have any characters
   } else {
     uint8_t c = rxBuffer[(*rxTail)];
     (*rxTail) = TWI_advancePosition(*rxTail);
@@ -505,7 +502,6 @@ int TwoWire::read(void) {
  *@retval     byte in the buffer or -1 if buffer is empty
  */
 int TwoWire::peek(void) {
-
   uint8_t* rxHead;
   uint8_t* rxTail;
   uint8_t* rxBuffer;
@@ -604,7 +600,7 @@ uint8_t TwoWire::getIncomingAddress(void) {
     vars._module->DUALCTRL = ((fmp_enable << TWI_FMPEN_bp) | TWI_ENABLE_bm);
   }
 #else
-  void TwoWire::enableDualMode( __attribute__((unused)) bool fmp_enable) {
+  void TwoWire::enableDualMode(__attribute__((unused)) bool fmp_enable) {
     badCall("DualMode is not supported on this device.");
   }
 #endif
@@ -628,24 +624,22 @@ uint8_t TwoWire::getIncomingAddress(void) {
  *
  *@return     void
  */
-void TwoWire::onSlaveIRQ(TWI_t *module){                  // This function is static and is, thus, the only one for both
-                                                          // Wire interfaces. Here is decoded which interrupt was fired.
-
-#if defined(TWI1)                                         // Two TWIs available
-   #if defined(USING_WIRE1)                               // User wants to use Wire and Wire1. Need to check the interface
+void TwoWire::onSlaveIRQ(TWI_t *module) {           // This function is static and is, thus, the only one for both
+                                                    // Wire interfaces. Here is decoded which interrupt was fired.
+  #if defined(TWI1)                                 // Two TWIs available
+    #if defined(USING_WIRE1)                        // User wants to use Wire and Wire1. Need to check the interface
       if (module == &TWI0) {
-         TWI_HandleSlaveIRQ(&(Wire.vars));
+        TWI_HandleSlaveIRQ(&(Wire.vars));
+      } else if (module == &TWI1) {
+        TWI_HandleSlaveIRQ(&(Wire1.vars));
       }
-      else if (module == &TWI1) {
-         TWI_HandleSlaveIRQ(&(Wire1.vars));
-      }
-   #else                                                  // User uses only Wire but can use TWI0 and TWI1
-       TWI_HandleSlaveIRQ(&(Wire.vars));                  // Only one possible SlaveIRQ source/Target Class
-   #endif
-#else                                                     // Only TWI0 available, IRQ can only have been issued by that interface
-   TWI_HandleSlaveIRQ(&(Wire.vars));                      // No need to check for it
-#endif
-   (void)module;
+    #else                                           // User uses only Wire but can use TWI0 and TWI1
+      TWI_HandleSlaveIRQ(&(Wire.vars));             // Only one possible SlaveIRQ source/Target Class
+    #endif
+  #else                                             // Only TWI0 available, IRQ can only have been issued by that interface
+    TWI_HandleSlaveIRQ(&(Wire.vars));               // No need to check for it
+  #endif
+  (void)module;
 }
 
 
@@ -692,6 +686,6 @@ void TwoWire::onRequest(void (*function)(void)) {
 
 #if defined(TWI1)
   #if defined(USING_WIRE1)
-     TwoWire Wire1(&TWI1);
+    TwoWire Wire1(&TWI1);
   #endif
 #endif
