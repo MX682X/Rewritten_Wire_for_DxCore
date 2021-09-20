@@ -190,6 +190,10 @@ void TwoWire::begin(void) {
  *@return     void
  */
 void TwoWire::begin(uint8_t address, bool receive_broadcast, uint8_t second_address) {
+  if (__builtin_constant_p(address) > 0x7F) {     // Compile-time check if address is actually 7 bit long
+    badArg("Supplied address seems to be 8 bit. Only 7 bit addresses are supported");
+    return;
+  }
   TWI_SlaveInit(&vars, address, receive_broadcast, second_address);
   TWI_RegisterSlaveISRcallback(onSlaveIRQ);                          // give the C part of the program a pointer to call back to.
 }
@@ -308,6 +312,10 @@ void TwoWire::beginTransmission(uint8_t address) {
     uint8_t* txHead  = &(vars._txHead);
     uint8_t* txTail  = &(vars._txTail);
   #endif
+  if (__builtin_constant_p(address) > 0x7F) {     // Compile-time check if address is actually 7 bit long
+    badArg("Supplied address seems to be 8 bit. Only 7-bit-addresses are supported");
+    return;
+  }
   // set address of targeted slave
   vars._slaveAddress = address << 1;
   (*txTail) = (*txHead);  // reset transmitBuffer

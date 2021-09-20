@@ -44,7 +44,7 @@ SOFTWARE.
                           // It is not advised to use this define. Only use this when you need the RAM **really** badly
 */
 
-#if (!(defined(PIN_WIRE1_SDA) || defined(PIN_WIRE1_SCL)) && defined(USING_WIRE1))
+#if (!defined(TWI1) && defined(USING_WIRE1))
   // If pins for Wire1 are not defined, but USING_WIRE1 was defined in the boards.txt menu, throw an error. Used for 28-pin DA/DB parts
   #error "This part does not support two Wire interfaces."
 #endif
