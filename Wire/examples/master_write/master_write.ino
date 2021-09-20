@@ -5,7 +5,7 @@
 // Writes data to an I2C/TWI slave device
 // Refer to the "Wire Slave Read" example for use with this
 
-// Tested with Curiosity Nano - AVR128DA48 
+// Tested with Curiosity Nano - AVR128DA48
 #include <Wire.h>
 
 char input[32];
@@ -18,7 +18,7 @@ void setup() {
 
 void loop() {
   if (Serial1.available() > 0) {    // as soon as the first byte is received on Serial
-    while (true) {                  // In an endless while-loop
+    while (true) {                  // in an endless while-loop
       char c = Serial1.read();      // read the next char
       while (c == -1) {             // when the buffer is empty, Serial.read() returns -1
         c = Serial1.read();         // this avoids that
@@ -38,7 +38,7 @@ void loop() {
 }
 
 void sendDataWire() {
-  Wire.beginTransmission(0x54);     // prepare Transmission to slave with address 0x54
+  Wire.beginTransmission(0x54);     // prepare transmission to slave with address 0x54
   for (uint8_t i = 0; i < len; i++) {
     Wire.write(input[i]);           // Write the received data to the bus buffer
   }

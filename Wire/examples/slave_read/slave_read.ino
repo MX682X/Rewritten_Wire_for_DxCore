@@ -5,7 +5,7 @@
 // Receives data as an I2C/TWI slave device
 // Refer to the "Wire Master Write" example for use with this
 
-// Tested with Curiosity Nano - AVR128DA48 
+// Tested with Curiosity Nano - AVR128DA48
 #include <Wire.h>
 
 void setup() {
@@ -22,8 +22,8 @@ void loop() {
 // function that executes whenever data is received from master
 // this function is registered as an event, see setup()
 void receiveDataWire(int16_t numBytes) {      // the Wire library tells us how many bytes
-  for (uint8_t i = 0; i < numBytes; i++) {    // were received so we can for loop for that 
+  for (uint8_t i = 0; i < numBytes; i++) {    // were received so we can for loop for that
     char c = Wire.read();                     // amount and read the received data
-    Serial1.write(c);                         // to print it to the Serial Monitor 
+    Serial1.write(c);                         // to print it to the Serial Monitor
   }
 }
