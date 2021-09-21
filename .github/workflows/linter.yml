@@ -19,7 +19,7 @@ on:
     branches-ignore: [master, main]
     # Remove the line above to run when pushing to master
   pull_request:
-    branches: [master, main, linter_test]
+    branches: [master, main]
 
 ###############
 # Set the Job #
@@ -53,5 +53,5 @@ jobs:
         env:
           VALIDATE_CPP: true
           VALIDATE_ALL_CODEBASE: true
-          DEFAULT_BRANCH: linter_test
+          DEFAULT_BRANCH: main
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
