@@ -18,22 +18,26 @@ void setup() {
 
 void loop() {
   if (Serial1.available() > 0) {    // as soon as the first byte is received on Serial
-    while (true) {                  // in an endless while-loop
-      char c = Serial1.read();      // read the next char
-      while (c == -1) {             // when the buffer is empty, Serial.read() returns -1
-        c = Serial1.read();         // this avoids that
-      }
-      if (c == '\n' || c == 'r') {  // until a new line or carriage return is found
-        break;                      // if so, break the endless while-loop
-      }                             // otherwise
-      input[len] = c;               // save the char
-      len++;                        // increment the  position
-      if (len > 30) {               // if there was too much data
-        break;                      // break the while-loop to avoid buffer overflow
-      }
-    }
-    sendDataWire();                 // after the while-loop, end the data over I2C
+    readFromSerial();               // read the data from the Serial interface
+    sendDataWire();                 // after the while-loop, send the data over I2C
     len = 0;                        // since the data was sent, the position is 0 again
+  }
+}
+
+void readFromSerial() {
+  while (true) {                    // in an endless while-loop
+    char c = Serial1.read();        // read the next char
+    while (c == -1) {               // when the buffer is empty, Serial.read() returns -1
+      c = Serial1.read();           // this avoids that
+    }
+    if (c == '\n' || c == 'r') {    // until a new line or carriage return is found
+      break;                        // if so, break the endless while-loop
+    }                               // otherwise
+    input[len] = c;                 // save the char
+    len++;                          // increment the  position
+    if (len > 30) {                 // if there was too much data
+      break;                        // break the while-loop to avoid buffer overflow
+    }
   }
 }
 

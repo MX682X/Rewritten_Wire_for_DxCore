@@ -6,6 +6,9 @@
 // Refer to the "Wire Master Write" example for use with this
 
 // Tested with Curiosity Nano - AVR128DA48
+
+// This example prints everything that is received on the
+// I2C bus on the serial monitor
 #include <Wire.h>
 
 void setup() {
