@@ -368,11 +368,11 @@ size_t TwoWire::write(uint8_t data) {
 
   #if defined(TWI_MANDS)                   // Add following if master and slave are split
     if (vars._bools._toggleStreamFn == 0x01) {
-      #if defined(TWI_MERGE_BUFFERS)       // Separate tx/rx Buffers
+      #if defined(TWI_MERGE_BUFFERS)       // Same Buffers for tx/rx
         txHead   = &(vars._trHeadS);
         txTail   = &(vars._trTailS);
         txBuffer =   vars._trBufferS;
-      #else                                // Same Buffers for tx/rx
+      #else                                // Separate tx/rx Buffers
         txHead   = &(vars._txHeadS);
         txTail   = &(vars._txTailS);
         txBuffer =   vars._txBufferS;

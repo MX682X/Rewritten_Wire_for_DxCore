@@ -429,7 +429,7 @@ uint8_t TWI_MasterRead(struct twiData *_data, uint8_t bytesToRead, bool send_sto
   uint8_t readAddress = ADD_READ_BIT(_data->_slaveAddress);     // Get slave address and set the read bit
   _data->_module->MADDR = readAddress;                          // write to the ADDR Register -> (repeated) Start condition is issued and slave address is sent
 
-  while (!(_data->_module->MSTATUS & TWI_RIF_bm)) {}            // Wait for the address/data receive completion
+  while (!(_data->_module->MSTATUS & TWI_WIF_bm)) {}            // Wait for the address/data receive completion
 
   if (_data->_module->MSTATUS & TWI_RXACK_bm) {                 // Address was not Acknowledged (state M3 in data sheet)
     send_stop = true;                                           // Terminate the transaction, retVal is still '0'
@@ -608,6 +608,7 @@ void TWI_HandleSlaveIRQ(struct twiData *_data) {
         NotifyUser_onReceive(_data);                // Notify user program "onReceive" if necessary
         (*rxTail) = (*rxHead);                      // User should have handled all data, if not, set available rxBytes to 0
         break;
+        
       // Address Interrupt
       case 0x61:    // APIF|CLKHOLD|AP              // ADR with master write / slave read
         (*address) = _data->_module->SDATA;
@@ -615,7 +616,8 @@ void TWI_HandleSlaveIRQ(struct twiData *_data) {
           (*rxTail) = (*rxHead);                    // reset buffer positions so the master can start writing at zero.
         #endif
         _data->_module->SCTRLB = TWI_SCMD_RESPONSE_gc;  // "Execute Acknowledge Action succeeded by reception of next byte"
-        break;                                      // expecting data interrupt next (case 0xA0). Fills rxBuffer
+        break;  
+        // expecting data interrupt next (case 0xA0). Fills rxBuffer
       case 0x63:    // APIF|CLKHOLD|DIR|AP          // ADR with master read  / slave write
         (*address) = _data->_module->SDATA;         // saving address to pass to the user function
         //                                             There is no way to identify a REPSTART, so when a Master Read occurs after a master write
@@ -662,6 +664,7 @@ void TWI_HandleSlaveIRQ(struct twiData *_data) {
       // Data Read Interrupt
       // case 0x90:  // DIF|RXACK
       case 0xB2:    // DIF|CLKHOLD|RXACK|DIR       // data NACK on master read  / slave write
+      /* fall-through */
       case 0xB3:    // DIF|CLKHOLD|RXACK|DIR|AP
         _data->_bools._ackMatters = false;                // stop checking for NACK
         _data->_module->SCTRLB = TWI_SCMD_COMPTRANS_gc;   // "Wait for any Start (S/Sr) condition"

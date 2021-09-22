@@ -30,7 +30,7 @@ void readFromSerial() {
     while (c == -1) {               // when the buffer is empty, Serial.read() returns -1
       c = Serial1.read();           // this avoids that
     }
-    if (c == '\n' || c == 'r') {    // until a new line or carriage return is found
+    if (c == '\n' || c == '\r') {    // until a new line or carriage return is found
       break;                        // if so, break the endless while-loop
     }                               // otherwise
     input[len] = c;                 // save the char
