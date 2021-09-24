@@ -30,7 +30,9 @@ void setup() {
 void loop() {
   if (Serial1.available() > 0) {    // as soon as the first byte is received on Serial
     readFromSerial();               // read the data from the Serial interface
-    sendDataWire();                 // after the while-loop, send the data over I2C
+    if (len > 0) {                  // after the while-loop, if there was useful data,
+      sendDataWire();               // send the data over I2C
+    }
     len = 0;                        // since the data was sent, the position is 0 again
   }
 }

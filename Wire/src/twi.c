@@ -429,7 +429,7 @@ uint8_t TWI_MasterRead(struct twiData *_data, uint8_t bytesToRead, bool send_sto
   uint8_t readAddress = ADD_READ_BIT(_data->_slaveAddress);     // Get slave address and set the read bit
   _data->_module->MADDR = readAddress;                          // write to the ADDR Register -> (repeated) Start condition is issued and slave address is sent
 
-  while (!(_data->_module->MSTATUS & TWI_WIF_bm)) {}            // Wait for the address/data receive completion
+  while (!(_data->_module->MSTATUS & (TWI_WIF_bm | TWI_RIF_bm))) {}   // WIF if NACKed, RIF if ACKed
 
   if (_data->_module->MSTATUS & TWI_RXACK_bm) {                 // Address was not Acknowledged (state M3 in data sheet)
     send_stop = true;                                           // Terminate the transaction, retVal is still '0'
@@ -675,7 +675,7 @@ void TWI_HandleSlaveIRQ(struct twiData *_data) {
       default:
         // Abort operation
         _data->_module->SCTRLB = TWI_ACKACT_bm | TWI_SCMD_COMPTRANS_gc;
-        // while (true) {}  // while loop for debugging. Use this to see what SSTATUS is
+         while (true) {}  // while loop for debugging. Use this to see what SSTATUS is
         break;
     }
   }
