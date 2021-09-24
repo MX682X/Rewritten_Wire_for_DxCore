@@ -608,7 +608,7 @@ void TWI_HandleSlaveIRQ(struct twiData *_data) {
         NotifyUser_onReceive(_data);                // Notify user program "onReceive" if necessary
         (*rxTail) = (*rxHead);                      // User should have handled all data, if not, set available rxBytes to 0
         break;
-        
+
       // Address Interrupt
       case 0x61:    // APIF|CLKHOLD|AP              // ADR with master write / slave read
         (*address) = _data->_module->SDATA;
@@ -616,7 +616,7 @@ void TWI_HandleSlaveIRQ(struct twiData *_data) {
           (*rxTail) = (*rxHead);                    // reset buffer positions so the master can start writing at zero.
         #endif
         _data->_module->SCTRLB = TWI_SCMD_RESPONSE_gc;  // "Execute Acknowledge Action succeeded by reception of next byte"
-        break;  
+        break;
         // expecting data interrupt next (case 0xA0). Fills rxBuffer
       case 0x63:    // APIF|CLKHOLD|DIR|AP          // ADR with master read  / slave write
         (*address) = _data->_module->SDATA;         // saving address to pass to the user function

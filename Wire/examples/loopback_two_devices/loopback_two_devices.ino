@@ -8,15 +8,15 @@
 // Tested with Curiosity Nano - AVR128DA48
 
 // This example takes the input from Serial. This code can run on both MCUs
-// If the first element is a 'r' or 'R', it will read the data on Wire 
-// from the slave address 0x54, in this example the millis(), and print 
+// If the first element is a 'r' or 'R', it will read the data on Wire
+// from the slave address 0x54, in this example the millis(), and print
 // it on the serial monitor.
 // If the first element is anything else, it writes the data on Wire to
-// the slave address 0x54. It is them copied in a buffer and sent back 
+// the slave address 0x54. It is them copied in a buffer and sent back
 // to the sender, but with the address 0x64, to avoid an endless loop
 
 // To use this, you need to connect the slave pins from one device to the
-// master pins of a second device. 
+// master pins of a second device.
 /* E.g. for two AVR128DA48 (pull-ups omitted)
  SDA(M) PA2 ----\    /---- PA2 SDA(M)
  SCL(M) PA3 ----\\  //---- PA3 SCL(M)
@@ -79,7 +79,7 @@ void sendDataWire() {
   uint32_t ms;
   if (firstElement == 'r' || firstElement == 'R') {   // check if the first element is an 'r' or 'R'
     Wire.requestFrom(0x54, 4, true);              // request from slave
-    while(Wire.available()){            
+    while ( Wire.available() ) {
       ms  = (uint32_t)Wire.read();                // read out 32-bit wide data
       ms |= (uint32_t)Wire.read() <<  8;
       ms |= (uint32_t)Wire.read() << 16;

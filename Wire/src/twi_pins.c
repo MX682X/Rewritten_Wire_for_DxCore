@@ -29,7 +29,6 @@
 
 #include <Arduino.h>
 
-#include "avr/io.h"
 #include "twi_pins.h"
 
 bool TWI_checkPins(const uint8_t sda_pin, const uint8_t scl_pin);
