@@ -17,7 +17,7 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
   Modified 2012 by Todd Krein (todd@krein.org) to implement repeated starts
-  Modified 2017 by Chuck Todd (ctodd@cableone.net) to correct Unconfigured Client Mode reboot
+  Modified 2017 by Chuck Todd (ctodd@cableone.net) to correct Unconfigured Slave Mode reboot
   Modified 2019-2021 by Spence Konde for megaTinyCore and DxCore.
   This version is part of megaTinyCore and DxCore; it is not expected
   to work with other hardware or cores without modifications.
@@ -53,8 +53,8 @@ extern "C" {    // compiler was complaining when I put twi.h into the upper C in
  */
 TwoWire::TwoWire(TWI_t *twi_module) {
   vars._module = twi_module;
-  // vars.user_onRequest = NULL;  // Make sure to initialize this pointers
-  // vars.user_onReceive = NULL;  // This avoids weird jumps should something unexpected happen
+  //vars.user_onRequest = NULL;  // Make sure to initialize this pointers
+  //vars.user_onReceive = NULL;  // This avoids weird jumps should something unexpected happen
 }
 
 // Public Methods // /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// ///
@@ -166,7 +166,7 @@ bool TwoWire::swapModule(TWI_t *twi_module) {
  *@return     void
  */
 void TwoWire::begin(void) {
-  TWI_HostInit(&vars);
+  TWI_MasterInit(&vars);
 }
 
 
@@ -189,8 +189,8 @@ void TwoWire::begin(uint8_t address, bool receive_broadcast, uint8_t second_addr
     badArg("Supplied address seems to be 8 bit. Only 7 bit addresses are supported");
     return;
   }
-  TWI_ClientInit(&vars, address, receive_broadcast, second_address);
-  TWI_RegisterClientISRcallback(onClientIRQ);                        // give the C part of the program a pointer to call back to.
+  TWI_SlaveInit(&vars, address, receive_broadcast, second_address);
+  TWI_RegisterSlaveISRcallback(onSlaveIRQ);                        // give the C part of the program a pointer to call back to.
 }
 
 
@@ -204,7 +204,7 @@ void TwoWire::begin(uint8_t address, bool receive_broadcast, uint8_t second_addr
  *@return     void
  */
 void TwoWire::setClock(uint32_t clock) {
-  TWI_HostSetBaud(&vars, clock);
+  TWI_MasterSetBaud(&vars, clock);
 }
 
 
@@ -228,22 +228,22 @@ void TwoWire::end(void) {
  *@return     void
  */
 #if defined(TWI_MANDS)
-void TwoWire::endHost(void) {
-  TWI_DisableHost(&vars);
+void TwoWire::endMaster(void) {
+  TWI_DisableMaster(&vars);
 }
 #endif
 
 
 /**
- *@brief      endClient disables the TWI client
+ *@brief      endSlave disables the TWI client
  *
  *@param      void
  *
  *@return     void
  */
 #if defined(TWI_MANDS)
-void TwoWire::endClient(void) {
-  TWI_DisableClient(&vars);
+void TwoWire::endSlave(void) {
+  TWI_DisableSlave(&vars);
 }
 #endif
 
@@ -283,7 +283,7 @@ uint8_t TwoWire::requestFrom(uint8_t  address,  uint8_t  quantity,  uint8_t send
     quantity = BUFFER_LENGTH;
   }
   vars._clientAddress = address << 1;
-  return TWI_HostRead(&vars, quantity, sendStop);
+  return TWI_MasterRead(&vars, quantity, sendStop);
 }
 
 
@@ -338,7 +338,7 @@ void TwoWire::beginTransmission(uint8_t address) {
  */
 uint8_t TwoWire::endTransmission(bool sendStop) {
   // transmit (blocking)
-  return TWI_HostWrite(&vars, sendStop);
+  return TWI_MasterWrite(&vars, sendStop);
 }
 
 
@@ -601,7 +601,7 @@ uint8_t TwoWire::getIncomingAddress(void) {
 void TwoWire::enableDualMode(bool fmp_enable) {
   #if defined(TWI_DUALCTRL)
     vars._module->DUALCTRL = ((fmp_enable << TWI_FMPEN_bp) | TWI_ENABLE_bm);
-  #else
+  #else 
     badCall("enableDualMode was called, but device does not support it");
     (void) fmp_enable;    // Disable unused variable warning
   #endif
@@ -611,7 +611,7 @@ void TwoWire::enableDualMode(bool fmp_enable) {
 
 
 /**
- *@brief      onClientIRQ is called by the interrupts and calls the interrupt handler
+ *@brief      onSlaveIRQ is called by the interrupts and calls the interrupt handler
  *
  *            Another little hack I had to do: This function is static, thus there is no extra copy
  *            when a new Wire object, like Wire1 is initialized. When I first wrote this function
@@ -625,20 +625,20 @@ void TwoWire::enableDualMode(bool fmp_enable) {
  *
  *@return     void
  */
-void TwoWire::onClientIRQ(TWI_t *module) {          // This function is static and is, thus, the only one for both
+void TwoWire::onSlaveIRQ(TWI_t *module) {          // This function is static and is, thus, the only one for both
                                                     // Wire interfaces. Here is decoded which interrupt was fired.
   #if defined(TWI1)                                 // Two TWIs available
     #if defined(USING_WIRE1)                        // User wants to use Wire and Wire1. Need to check the interface
       if (module == &TWI0) {
-        TWI_HandleClientIRQ(&(Wire.vars));
+        TWI_HandleSlaveIRQ(&(Wire.vars));
       } else if (module == &TWI1) {
-        TWI_HandleClientIRQ(&(Wire1.vars));
+        TWI_HandleSlaveIRQ(&(Wire1.vars));
       }
     #else                                           // User uses only Wire but can use TWI0 and TWI1
-      TWI_HandleClientIRQ(&(Wire.vars));             // Only one possible ClientIRQ source/Target Class
+      TWI_HandleSlaveIRQ(&(Wire.vars));             // Only one possible SlaveIRQ source/Target Class
     #endif
   #else                                             // Only TWI0 available, IRQ can only have been issued by that interface
-    TWI_HandleClientIRQ(&(Wire.vars));               // No need to check for it
+    TWI_HandleSlaveIRQ(&(Wire.vars));               // No need to check for it
   #endif
   (void)module;
 }
@@ -656,13 +656,13 @@ void TwoWire::onClientIRQ(TWI_t *module) {          // This function is static a
  */
 void TwoWire::onReceive(void (*function)(int)) {
   if (__builtin_constant_p(function)) {
-    if (__builtin_expect(function != NULL, 1)) {
+    if (__builtin_expect (function != NULL, 1)) {
       vars.user_onReceive = function;
     } else {
       badArg("Null pointer passed to onReceive()");
     }
   } else {
-    if (__builtin_expect(function != NULL, 1)) {
+    if (__builtin_expect (function != NULL, 1)) {
       vars.user_onReceive = function;
     }
   }
@@ -680,13 +680,13 @@ void TwoWire::onReceive(void (*function)(int)) {
  */
 void TwoWire::onRequest(void (*function)(void)) {
   if (__builtin_constant_p(function)) {
-    if (__builtin_expect(function != NULL, 1)) {
+    if (__builtin_expect (function != NULL, 1)) {
       vars.user_onRequest = function;
     } else {
       badArg("Null pointer passed to onRequest()");
     }
   } else {
-    if (__builtin_expect(function != NULL, 1)) {
+    if (__builtin_expect (function != NULL, 1)) {
       vars.user_onRequest = function;
     }
   }

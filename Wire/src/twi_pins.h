@@ -50,7 +50,7 @@
  *@return             uint8_t
  *@retval             the desired baud value
  */
-uint8_t TWI_HostCalcBaud(uint32_t frequency);
+uint8_t TWI_MasterCalcBaud(uint32_t frequency);
 
 
 void   TWI0_ClearPins();

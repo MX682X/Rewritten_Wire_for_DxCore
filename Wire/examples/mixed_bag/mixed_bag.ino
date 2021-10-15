@@ -35,10 +35,10 @@ int8_t rxLen = 0;
 int8_t len = 0;
 
 void setup() {
-  //Wire.swapModule(&TWI1);     // Wire can work with TWI0 and TWI1, but the Wire has to be disabled
+  // Wire.swapModule(&TWI1);     // Wire can work with TWI0 and TWI1, but the Wire has to be disabled
                               // when calling it. Will return true if successful. Used to offer TWI1 pins
                               // to Arduino libraries that support only one Wire
-  //Wire.swap(2);               // Route TWI pins to an alternative pinout. 
+  // Wire.swap(2);               // Route TWI pins to an alternative pinout.
   Wire.enableDualMode(true);  // set argument true if FastMode+ speeds are expected on slave
   Wire.begin();                                 // initialize master
   Wire.begin(0x54, false, ((0x64 << 1) | 1));   // initialize slave
@@ -81,7 +81,7 @@ void readFromSerial() {
 void sendDataWire() {
   uint8_t firstElement = input[0];
   uint32_t ms;
-  
+
   if (firstElement == 'r' || firstElement == 'R') {   // check if the first element is an 'r' or 'R'
     if (4 == Wire.requestFrom(0x54, 4, 0x01)) {              // request from slave
       while ( Wire.available() ) {

@@ -99,15 +99,15 @@ SOFTWARE.
 #define  TWI_ERR_RXACK         5  // Address or data was NACKed
 #define  TWI_ERR_CLKHLD        6  // Something's holding the clock
 #define  TWI_ERR_UNDEFINED     7  // Software can't tell error source
-
+  
 #if defined(TWI_ERROR_ENABLED)
   #define TWI_ERROR_VAR   twi_error
   #define TWI_INIT_ERROR  uint8_t TWI_ERROR_VAR = TWI_NO_ERR
-
+  
   #define TWI_CHK_ERROR(x) TWI_ERROR_VAR == x
   #define TWI_SET_ERROR(x) TWI_ERROR_VAR = x
   #define TWI_SAVE_ERROR(x) x = TWI_ERROR_VAR
-#else
+#else 
   #define TWI_ERROR_VAR   ;
   #define TWI_INIT_ERROR  ;
 
@@ -136,11 +136,11 @@ struct twiData {
   TWI_t *_module;
 
   struct twiDataBools _bools;      // the structure to hold the bools for the class
-
+  
   #if defined(TWI_ERROR_ENABLED)
     uint8_t _errors;
   #endif
-
+  
   uint8_t _clientAddress;
   #if defined(TWI_MERGE_BUFFERS)
     uint8_t _trHead;
@@ -188,19 +188,19 @@ struct twiData {
 
 uint8_t  TWI_advancePosition(uint8_t pos);  // returns the next Position with Round-Robin functionality
 
-void     TWI_HostInit(struct        twiData *_data);
-void     TWI_ClientInit(struct      twiData *_data, uint8_t address, uint8_t receive_broadcast, uint8_t second_address);
+void     TWI_MasterInit(struct        twiData *_data);
+void     TWI_SlaveInit(struct      twiData *_data, uint8_t address, uint8_t receive_broadcast, uint8_t second_address);
 void     TWI_Flush(struct           twiData *_data);
 void     TWI_Disable(struct         twiData *_data);
-void     TWI_DisableHost(struct     twiData *_data);
-void     TWI_DisableClient(struct   twiData *_data);
-void     TWI_HostSetBaud(struct     twiData *_data, uint32_t frequency);
+void     TWI_DisableMaster(struct     twiData *_data);
+void     TWI_DisableSlave(struct   twiData *_data);
+void     TWI_MasterSetBaud(struct     twiData *_data, uint32_t frequency);
 uint8_t  TWI_Available(struct       twiData *_data);
-uint8_t  TWI_HostWrite(struct       twiData *_data, bool send_stop);
-uint8_t  TWI_HostRead(struct        twiData *_data, uint8_t bytesToRead, bool send_stop);
-void     TWI_HandleClientIRQ(struct twiData *_data);
+uint8_t  TWI_MasterWrite(struct       twiData *_data, bool send_stop);
+uint8_t  TWI_MasterRead(struct        twiData *_data, uint8_t bytesToRead, bool send_stop);
+void     TWI_HandleSlaveIRQ(struct twiData *_data);
 
 // uint8_t  TWI_MasterCalcBaud(uint32_t frequency);  // moved to twi_pins.h due to license incompatibilities
-void     TWI_RegisterClientISRcallback(void (*function)(TWI_t *module));
+void     TWI_RegisterSlaveISRcallback(void (*function)(TWI_t *module));
 
 #endif

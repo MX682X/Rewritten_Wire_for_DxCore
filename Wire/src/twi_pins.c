@@ -46,7 +46,7 @@ bool TWI_checkPins(const uint8_t sda_pin, const uint8_t scl_pin);
  *@retval             the desired baud value
  */
 #define TWI_BAUD(freq, t_rise) ((F_CPU / freq) / 2) - (5 + (((F_CPU / 1000000) * t_rise) / 2000))
-uint8_t TWI_HostCalcBaud(uint32_t frequency) {
+uint8_t TWI_MasterCalcBaud(uint32_t frequency) {
   uint16_t t_rise;
   int16_t baud;
 
