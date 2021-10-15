@@ -86,8 +86,8 @@ class TwoWire: public Stream {
     }
 
     void end();
-    void endMaster(void);
-    void endSlave(void);
+    void endHost(void);
+    void endClient(void);
 
     void beginTransmission(uint8_t address);
     void beginTransmission(int     address) {
@@ -104,6 +104,8 @@ class TwoWire: public Stream {
     uint8_t requestFrom(uint8_t address, size_t  quantity);
     uint8_t requestFrom(int     address, int     quantity, int     sendStop);
     uint8_t requestFrom(int     address, int     quantity);
+
+    uint16_t writeRead(uint8_t quantity, uint8_t sendStop);
 
     virtual size_t write(uint8_t);
     virtual size_t write(const uint8_t *, size_t);
@@ -132,10 +134,14 @@ class TwoWire: public Stream {
     }
     using Print::write;
 
+    #if defined(TWI_ERROR_ENABLED)
+      uint8_t returnError();
+    #endif
+
     void    TWI_onReceiveService(int numBytes);
     uint8_t TWI_onRequestService(void);
 
-    static void onSlaveIRQ(TWI_t *module);    // is called by the TWI interrupt routines
+    static void onClientIRQ(TWI_t *module);    // is called by the TWI interrupt routines
 };
 
 #if defined(TWI0)

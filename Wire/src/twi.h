@@ -37,6 +37,10 @@ SOFTWARE.
   #define ADD_WRITE_BIT(address)   (address & ~0x01)
 #endif
 
+#ifndef DEFAULT_FREQUENCY
+  #define DEFAULT_FREQUENCY 100000
+#endif
+
 /* These options are or will be controlled by boards.txt menu options
 #define USING_WIRE1       // On devices with two TWIs, this identifies if the user wants to use Wire1
 #define TWI_MANDS         // This enables the simultaneous use of the Master and Slave functionality - where supported
@@ -81,12 +85,44 @@ SOFTWARE.
   #endif                       /* 4809 core plus that couple bytes mentioned above.           */
 #endif
 
+
+#define TWI_TIMEOUT_ENABLE    // Enabled by default, might be disabled for debugging or other reasons
+
+// #define TWI_ERROR_ENABLED
+
+// The error result may not be accurate, it just helps narrowing the problem down
+#define  TWI_NO_ERR            0      // Default
+#define  TWI_ERR_PULLUP        1  // Likely problem with pull-ups
+#define  TWI_ERR_TIMEOUT       2  // TWI Timed out on data rx/tx
+#define  TWI_ERR_BUS_ARB       3  // Bus error and/or Arbitration lost
+#define  TWI_ERR_BUF_OVERFLOW  4  // Buffer overflow on master read
+#define  TWI_ERR_RXACK         5  // Address or data was NACKed
+#define  TWI_ERR_CLKHLD        6  // Something's holding the clock
+#define  TWI_ERR_UNDEFINED     7  // Software can't tell error source
+
+#if defined(TWI_ERROR_ENABLED)
+  #define TWI_ERROR_VAR   twi_error
+  #define TWI_INIT_ERROR  uint8_t TWI_ERROR_VAR = TWI_NO_ERR
+
+  #define TWI_CHK_ERROR(x) TWI_ERROR_VAR == x
+  #define TWI_SET_ERROR(x) TWI_ERROR_VAR = x
+  #define TWI_SAVE_ERROR(x) x = TWI_ERROR_VAR
+#else
+  #define TWI_ERROR_VAR   ;
+  #define TWI_INIT_ERROR  ;
+
+  #define TWI_CHK_ERROR(x) (true)
+  #define TWI_SET_ERROR(x) ;
+  #define TWI_SAVE_ERROR(x) ;
+#endif
+
+
 struct twiDataBools {       // using a struct so the compiler can use skip if bit is set/cleared
-  uint8_t reserved:     4;  // reserved for Future use, maybe error codes?
-  bool _toggleStreamFn: 1;  // used to toggle between Slave and Master elements when TWI_MANDS defined
-  bool _masterEnabled:  1;
-  bool _slaveEnabled:   1;
-  bool _ackMatters:     1;
+  uint8_t _reserved:      4;
+  bool _toggleStreamFn:   1;  // used to toggle between Slave and Master elements when TWI_MANDS defined
+  bool _hostEnabled:      1;
+  bool _clientEnabled:    1;
+  bool _ackMatters:       1;
 };
 
 /* My original idea was to pass the whole TwoWire class as a  */
@@ -101,7 +137,11 @@ struct twiData {
 
   struct twiDataBools _bools;      // the structure to hold the bools for the class
 
-  uint8_t _slaveAddress;
+  #if defined(TWI_ERROR_ENABLED)
+    uint8_t _errors;
+  #endif
+
+  uint8_t _clientAddress;
   #if defined(TWI_MERGE_BUFFERS)
     uint8_t _trHead;
     uint8_t _trTail;
@@ -135,8 +175,8 @@ struct twiData {
     uint8_t _rxBuffer[BUFFER_LENGTH];
   #endif
 
-  #if defined(TWI_MANDS)              // Putting the arrays in the end because the first 32 bytes can
-    #if defined(TWI_MERGE_BUFFERS)    // be accessed easier and faster
+  #if defined(TWI_MANDS)
+    #if defined(TWI_MERGE_BUFFERS)
       uint8_t _trBufferS[BUFFER_LENGTH];
     #else
       uint8_t _txBufferS[BUFFER_LENGTH];
@@ -145,21 +185,22 @@ struct twiData {
   #endif
 };
 
+
 uint8_t  TWI_advancePosition(uint8_t pos);  // returns the next Position with Round-Robin functionality
 
-void     TWI_MasterInit(struct      twiData *_data);
-void     TWI_SlaveInit(struct       twiData *_data, uint8_t address, uint8_t receive_broadcast, uint8_t second_address);
+void     TWI_HostInit(struct        twiData *_data);
+void     TWI_ClientInit(struct      twiData *_data, uint8_t address, uint8_t receive_broadcast, uint8_t second_address);
 void     TWI_Flush(struct           twiData *_data);
 void     TWI_Disable(struct         twiData *_data);
-void     TWI_DisableMaster(struct   twiData *_data);
-void     TWI_DisableSlave(struct    twiData *_data);
-void     TWI_MasterSetBaud(struct   twiData *_data, uint32_t frequency);
+void     TWI_DisableHost(struct     twiData *_data);
+void     TWI_DisableClient(struct   twiData *_data);
+void     TWI_HostSetBaud(struct     twiData *_data, uint32_t frequency);
 uint8_t  TWI_Available(struct       twiData *_data);
-uint8_t  TWI_MasterWrite(struct     twiData *_data, bool send_stop);
-uint8_t  TWI_MasterRead(struct      twiData *_data, uint8_t bytesToRead, bool send_stop);
-void     TWI_HandleSlaveIRQ(struct  twiData *_data);
+uint8_t  TWI_HostWrite(struct       twiData *_data, bool send_stop);
+uint8_t  TWI_HostRead(struct        twiData *_data, uint8_t bytesToRead, bool send_stop);
+void     TWI_HandleClientIRQ(struct twiData *_data);
 
 // uint8_t  TWI_MasterCalcBaud(uint32_t frequency);  // moved to twi_pins.h due to license incompatibilities
-void     TWI_RegisterSlaveISRcallback(void (*function)(TWI_t *module));
+void     TWI_RegisterClientISRcallback(void (*function)(TWI_t *module));
 
 #endif

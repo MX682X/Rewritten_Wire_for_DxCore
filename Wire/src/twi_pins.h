@@ -50,19 +50,19 @@
  *@return             uint8_t
  *@retval             the desired baud value
  */
-uint8_t TWI_MasterCalcBaud(uint32_t frequency);
+uint8_t TWI_HostCalcBaud(uint32_t frequency);
 
 
-void    TWI0_ClearPins();
-bool         TWI0_Pins(uint8_t sda_pin, uint8_t scl_pin);
-bool         TWI0_swap(uint8_t state);
+void   TWI0_ClearPins();
+bool   TWI0_Pins(uint8_t sda_pin, uint8_t scl_pin);
+bool   TWI0_swap(uint8_t state);
 void   TWI0_usePullups();
 
 
 #if defined (TWI1)
-  void    TWI1_ClearPins();
-  bool         TWI1_Pins(uint8_t sda_pin, uint8_t scl_pin);
-  bool         TWI1_swap(uint8_t state);
+  void   TWI1_ClearPins();
+  bool   TWI1_Pins(uint8_t sda_pin, uint8_t scl_pin);
+  bool   TWI1_swap(uint8_t state);
   void   TWI1_usePullups();
 #endif
 

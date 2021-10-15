@@ -17,12 +17,12 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
   Modified 2012 by Todd Krein (todd@krein.org) to implement repeated starts
-  Modified 2017 by Chuck Todd (ctodd@cableone.net) to correct Unconfigured Slave Mode reboot
+  Modified 2017 by Chuck Todd (ctodd@cableone.net) to correct Unconfigured Client Mode reboot
   Modified 2019-2021 by Spence Konde for megaTinyCore and DxCore.
   This version is part of megaTinyCore and DxCore; it is not expected
   to work with other hardware or cores without modifications.
   Modified extensively 2021 by MX682X for megaTinyCore and DxCore.
-  Added Support for Simultaneous master/slave, dual mode and Wire1.
+  Added Support for Simultaneous host/client, dual mode and Wire1.
 */
 // *INDENT-OFF*   astyle wants this file to be completely unreadable with no indentation for the many preprocessor conditionals!
 extern "C" {
@@ -41,10 +41,6 @@ extern "C" {    // compiler was complaining when I put twi.h into the upper C in
   #include "twi_pins.h"
 }
 
-#ifndef DEFAULT_FREQUENCY
-  #define DEFAULT_FREQUENCY 100000
-#endif
-
 
 // Initialize Class Variables // /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// ///
 // Constructors   // /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// ///
@@ -57,8 +53,8 @@ extern "C" {    // compiler was complaining when I put twi.h into the upper C in
  */
 TwoWire::TwoWire(TWI_t *twi_module) {
   vars._module = twi_module;
-  vars.user_onRequest = NULL;  // Make sure to initialize this pointers
-  vars.user_onReceive = NULL;  // This avoids weird jumps should something unexpected happen
+  // vars.user_onRequest = NULL;  // Make sure to initialize this pointers
+  // vars.user_onReceive = NULL;  // This avoids weird jumps should something unexpected happen
 }
 
 // Public Methods // /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// ///
@@ -147,9 +143,9 @@ void TwoWire::usePullups(void) {
 bool TwoWire::swapModule(TWI_t *twi_module) {
   #if defined(TWI1)
     #if defined(USING_TWI1)
-      badCall("swapModule() can only be used if TWI1 is not used");
+      badCall("swapModule() can only be used if Wire1 is not used");
     #else
-      if (vars._module->MCTRLA == 0) {    // slave and master initialisations enable MCTRLA, so just check for that
+      if (vars._module->MCTRLA == 0) {    // client and host initialisations enable MCTRLA, so just check for that
         vars._module = twi_module;
         return true;                      // Success
       }
@@ -163,15 +159,14 @@ bool TwoWire::swapModule(TWI_t *twi_module) {
 
 
 /**
- *@brief      begin (w/o parameters) starts initializes the master operation of the TWI
+ *@brief      begin (w/o parameters) starts initializes the host operation of the TWI
  *
  *@param      void
  *
  *@return     void
  */
 void TwoWire::begin(void) {
-  TWI_MasterInit(&vars);
-  TWI_MasterSetBaud(&vars, DEFAULT_FREQUENCY);
+  TWI_HostInit(&vars);
 }
 
 
@@ -181,10 +176,10 @@ void TwoWire::begin(void) {
  *            Works only if the TWI is disabled
  *
  *
- *@param      uint8_t address - the desired address for the slave module
+ *@param      uint8_t address - the desired address for the client module
  *            bool receive_broadcast - if true, enables a response on the 0x00 call
  *            uint8_t second_address holds the data for the SADDRMASK register. If the LSB is '1'
- *              the TWI handles the 7 MSB as a second address for the slave, otherwise the 7 MSB
+ *              the TWI handles the 7 MSB as a second address for the client, otherwise the 7 MSB
  *              act as a bit mask, that disables the check on the corresponding SADDR bit.
  *
  *@return     void
@@ -194,8 +189,8 @@ void TwoWire::begin(uint8_t address, bool receive_broadcast, uint8_t second_addr
     badArg("Supplied address seems to be 8 bit. Only 7 bit addresses are supported");
     return;
   }
-  TWI_SlaveInit(&vars, address, receive_broadcast, second_address);
-  TWI_RegisterSlaveISRcallback(onSlaveIRQ);                          // give the C part of the program a pointer to call back to.
+  TWI_ClientInit(&vars, address, receive_broadcast, second_address);
+  TWI_RegisterClientISRcallback(onClientIRQ);                        // give the C part of the program a pointer to call back to.
 }
 
 
@@ -209,12 +204,12 @@ void TwoWire::begin(uint8_t address, bool receive_broadcast, uint8_t second_addr
  *@return     void
  */
 void TwoWire::setClock(uint32_t clock) {
-  TWI_MasterSetBaud(&vars, clock);
+  TWI_HostSetBaud(&vars, clock);
 }
 
 
 /**
- *@brief      end disables the TWI master and slave
+ *@brief      end disables the TWI host and client
  *
  *@param      void
  *
@@ -226,42 +221,42 @@ void TwoWire::end(void) {
 
 
 /**
- *@brief      endMaster disables the TWI master
+ *@brief      endhost disables the TWI host
  *
  *@param      void
  *
  *@return     void
  */
 #if defined(TWI_MANDS)
-void TwoWire::endMaster(void) {
-  TWI_DisableMaster(&vars);
+void TwoWire::endHost(void) {
+  TWI_DisableHost(&vars);
 }
 #endif
 
 
 /**
- *@brief      endSlave disables the TWI slave
+ *@brief      endClient disables the TWI client
  *
  *@param      void
  *
  *@return     void
  */
 #if defined(TWI_MANDS)
-void TwoWire::endSlave(void) {
-  TWI_DisableSlave(&vars);
+void TwoWire::endClient(void) {
+  TWI_DisableClient(&vars);
 }
 #endif
 
 
 
 /**
- *@brief      requestFrom sends a master READ with the specified slave address
+ *@brief      requestFrom sends a host READ with the specified client address
  *
  *            When a greater quantity then the BUFFER_LENGTH is passed, the quantity gets
  *            limited to the BUFFER_LENGTH.
  *            Received Bytes must be read with read().
  *
- *@param      int/uint8_t address - the address of the slave
+ *@param      int/uint8_t address - the address of the client
  *            int/uint8_t/size_t quantity - the amount of bytes that are expected to be received
  *            int/bool sendStop - if the transaction should be terminated with a STOP condition
  *
@@ -287,20 +282,20 @@ uint8_t TwoWire::requestFrom(uint8_t  address,  uint8_t  quantity,  uint8_t send
   if (quantity > BUFFER_LENGTH) {
     quantity = BUFFER_LENGTH;
   }
-  vars._slaveAddress = address << 1;
-  return TWI_MasterRead(&vars, quantity, sendStop);
+  vars._clientAddress = address << 1;
+  return TWI_HostRead(&vars, quantity, sendStop);
 }
 
 
 /**
- *@brief      beginTransmission prepares the Wire object for a master WRITE.
+ *@brief      beginTransmission prepares the Wire object for a host WRITE.
  *
- *            This function only saves the slave address in the structure, it does
+ *            This function only saves the client address in the structure, it does
  *            not perform any transmissions.
  *            a write() will fill the transmit buffer. write() has to be called after
  *            beginTransmission() was called
  *
- *@param      uint8_t address - the address of the slave
+ *@param      uint8_t address - the address of the client
  *
  *@return     void
  */
@@ -316,14 +311,14 @@ void TwoWire::beginTransmission(uint8_t address) {
     badArg("Supplied address seems to be 8 bit. Only 7-bit-addresses are supported");
     return;
   }
-  // set address of targeted slave
-  vars._slaveAddress = address << 1;
+  // set address of targeted client
+  vars._clientAddress = address << 1;
   (*txTail) = (*txHead);  // reset transmitBuffer
 }
 
 
 /**
- *@brief      endTransmission is the function that actually performs the (blocking) master WRITE
+ *@brief      endTransmission is the function that actually performs the (blocking) host WRITE
  *
  *            Originally, 'endTransmission' was an f(void) function. It has been modified to take
  *            one parameter indicating whether or not a STOP should be performed on the bus.
@@ -332,7 +327,7 @@ void TwoWire::beginTransmission(uint8_t address) {
  *            WARNING: Nothing in the library keeps track of whether the bus tenure has been
  *            properly ended with a STOP. It is very possible to leave the bus in a hung state if
  *            no call to endTransmission(true) is made. Some I2C devices will behave oddly
- *            if they do not see a STOP. Other masters won't be able to issue their START for example.
+ *            if they do not see a STOP. Other hosts won't be able to issue their START for example.
  *
  *@param      bool sendStop - if the transaction should be terminated with a STOP condition
  *
@@ -343,16 +338,16 @@ void TwoWire::beginTransmission(uint8_t address) {
  */
 uint8_t TwoWire::endTransmission(bool sendStop) {
   // transmit (blocking)
-  return TWI_MasterWrite(&vars, sendStop);
+  return TWI_HostWrite(&vars, sendStop);
 }
 
 
 
 /**
- *@brief      write fills the transmit buffers, master or slave depending on when it is called
+ *@brief      write fills the transmit buffers, host or client depending on when it is called
  *
- *            Usually, the function fills the master transmit buffer.
- *            If called inside the specified onReceive or onRequest functions, the slave buffer will be filled
+ *            Usually, the function fills the host transmit buffer.
+ *            If called inside the specified onReceive or onRequest functions, the client buffer will be filled
  *
  *@param      uint8_t data - byte to put into the buffer
  *
@@ -366,7 +361,7 @@ size_t TwoWire::write(uint8_t data) {
   uint8_t* txTail;
   uint8_t* txBuffer;
 
-  #if defined(TWI_MANDS)                   // Add following if master and slave are split
+  #if defined(TWI_MANDS)                   // Add following if host and client are split
     if (vars._bools._toggleStreamFn == 0x01) {
       #if defined(TWI_MERGE_BUFFERS)       // Same Buffers for tx/rx
         txHead   = &(vars._trHeadS);
@@ -427,16 +422,16 @@ size_t TwoWire::write(const uint8_t *data, size_t quantity) {
 
 
 /**
- *@brief      available returns the amount of bytes that are available to read in the master or slave buffer
+ *@brief      available returns the amount of bytes that are available to read in the host or client buffer
  *
- *            Usually, the function returns the amount of bytes to read in the master buffer.
+ *            Usually, the function returns the amount of bytes to read in the host buffer.
  *            If called inside the specified onReceive or onRequest functions,
- *            it returns the amount of bytes from the slave buffer
+ *            it returns the amount of bytes from the client buffer
  *
  *@param      void
  *
  *@return     int
- *@retval     amount of bytes available to read from the master buffer
+ *@retval     amount of bytes available to read from the host buffer
  */
 int TwoWire::available(void) {
   return TWI_Available(&vars);
@@ -445,11 +440,11 @@ int TwoWire::available(void) {
 
 
 /**
- *@brief      read returns a byte from the master or slave buffer and removes it from there
+ *@brief      read returns a byte from the host or client buffer and removes it from there
  *
- *            Usually, the function returns the byte from the master buffer.
+ *            Usually, the function returns the byte from the host buffer.
  *            If called inside the specified onReceive or onRequest functions,
- *            it returns the byte from the slave buffer
+ *            it returns the byte from the client buffer
  *
  *@param      void
  *
@@ -461,7 +456,7 @@ int TwoWire::read(void) {
   uint8_t* rxTail;
   uint8_t* rxBuffer;
 
-  #if defined(TWI_MANDS)                         // Add following if master and slave are split
+  #if defined(TWI_MANDS)                         // Add following if host and client are split
     if (vars._bools._toggleStreamFn == 0x01) {
       #if defined(TWI_MERGE_BUFFERS)             // Same Buffers for tx/rx
         rxHead   = &(vars._trHeadS);
@@ -498,11 +493,11 @@ int TwoWire::read(void) {
 
 
 /**
- *@brief      peek returns a byte from the master or slave buffer but does not remove it
+ *@brief      peek returns a byte from the host or client buffer but does not remove it
  *
- *            Usually, the function returns the byte from the master buffer.
+ *            Usually, the function returns the byte from the host buffer.
  *            If called inside the specified onReceive or onRequest functions,
- *            it returns the byte from the slave buffer
+ *            it returns the byte from the client buffer
  *
  *@param      void
  *
@@ -514,7 +509,7 @@ int TwoWire::peek(void) {
   uint8_t* rxTail;
   uint8_t* rxBuffer;
 
-  #if defined(TWI_MANDS)                          // Add following if master and slave are split
+  #if defined(TWI_MANDS)                          // Add following if host and client are split
     if (vars._bools._toggleStreamFn == 0x01) {
       #if defined(TWI_MERGE_BUFFERS)              // Same Buffers for tx/rx
         rxHead   = &(vars._trHeadS);
@@ -547,7 +542,7 @@ int TwoWire::peek(void) {
 
 
 /**
- *@brief      flush resets the master and slave buffers and restarts the TWI module
+ *@brief      flush resets the host and client buffers and restarts the TWI module
  *
  *@param      void
  *
@@ -573,9 +568,9 @@ void TwoWire::flush(void) {
 }
 
 /**
- *@brief      getIncomingAddress returns the last address the slave has reacted to
+ *@brief      getIncomingAddress returns the last address the client has reacted to
  *
- *            When used in master only mode, it will return the slaveAddress
+ *            When used in host only mode, it will return the clientAddress
  *            that was set by the user in beginTransmission()
  *
  *@param      void
@@ -587,13 +582,13 @@ uint8_t TwoWire::getIncomingAddress(void) {
   #if defined(TWI_MANDS)                         // Alias handler
     return vars._incomingAddress;
   #else
-    return vars._slaveAddress;
+    return vars._clientAddress;
   #endif
 }
 
 
 /**
- *@brief      enableDualMode enables the splitting of master and slave pins
+ *@brief      enableDualMode enables the splitting of host and client pins
  *
  *            useful when you want to separate multiple TWI buses.
  *            Only available on the chips with a bigger pin count. See data sheet.
@@ -603,22 +598,20 @@ uint8_t TwoWire::getIncomingAddress(void) {
  *
  *@return     void
  */
-#if defined(TWI_DUALCTRL)
-  void TwoWire::enableDualMode(bool fmp_enable) {
+void TwoWire::enableDualMode(bool fmp_enable) {
+  #if defined(TWI_DUALCTRL)
     vars._module->DUALCTRL = ((fmp_enable << TWI_FMPEN_bp) | TWI_ENABLE_bm);
-  }
-#else
-  void TwoWire::enableDualMode(__attribute__((unused)) bool fmp_enable) {
-    badCall("DualMode is not supported on this device.");
-  }
-#endif
-
+  #else
+    badCall("enableDualMode was called, but device does not support it");
+    (void) fmp_enable;    // Disable unused variable warning
+  #endif
+}
 
 
 
 
 /**
- *@brief      onSlaveIRQ is called by the interrupts and calls the interrupt handler
+ *@brief      onClientIRQ is called by the interrupts and calls the interrupt handler
  *
  *            Another little hack I had to do: This function is static, thus there is no extra copy
  *            when a new Wire object, like Wire1 is initialized. When I first wrote this function
@@ -632,20 +625,20 @@ uint8_t TwoWire::getIncomingAddress(void) {
  *
  *@return     void
  */
-void TwoWire::onSlaveIRQ(TWI_t *module) {           // This function is static and is, thus, the only one for both
+void TwoWire::onClientIRQ(TWI_t *module) {          // This function is static and is, thus, the only one for both
                                                     // Wire interfaces. Here is decoded which interrupt was fired.
   #if defined(TWI1)                                 // Two TWIs available
     #if defined(USING_WIRE1)                        // User wants to use Wire and Wire1. Need to check the interface
       if (module == &TWI0) {
-        TWI_HandleSlaveIRQ(&(Wire.vars));
+        TWI_HandleClientIRQ(&(Wire.vars));
       } else if (module == &TWI1) {
-        TWI_HandleSlaveIRQ(&(Wire1.vars));
+        TWI_HandleClientIRQ(&(Wire1.vars));
       }
     #else                                           // User uses only Wire but can use TWI0 and TWI1
-      TWI_HandleSlaveIRQ(&(Wire.vars));             // Only one possible SlaveIRQ source/Target Class
+      TWI_HandleClientIRQ(&(Wire.vars));             // Only one possible ClientIRQ source/Target Class
     #endif
   #else                                             // Only TWI0 available, IRQ can only have been issued by that interface
-    TWI_HandleSlaveIRQ(&(Wire.vars));               // No need to check for it
+    TWI_HandleClientIRQ(&(Wire.vars));               // No need to check for it
   #endif
   (void)module;
 }
@@ -653,7 +646,7 @@ void TwoWire::onSlaveIRQ(TWI_t *module) {           // This function is static a
 
 
 /**
- *@brief      onReceive saves the pointer to the desired function to call on master WRITE / slave READ.
+ *@brief      onReceive saves the pointer to the desired function to call on host WRITE / client READ.
  *
  *            remember, the specified function is called in an ISR, so keep it short.
  *
@@ -662,12 +655,22 @@ void TwoWire::onSlaveIRQ(TWI_t *module) {           // This function is static a
  *@return     void
  */
 void TwoWire::onReceive(void (*function)(int)) {
-  vars.user_onReceive = function;
+  if (__builtin_constant_p(function)) {
+    if (__builtin_expect(function != NULL, 1)) {
+      vars.user_onReceive = function;
+    } else {
+      badArg("Null pointer passed to onReceive()");
+    }
+  } else {
+    if (__builtin_expect(function != NULL, 1)) {
+      vars.user_onReceive = function;
+    }
+  }
 }
 
 
 /**
- *@brief      onRequest saves the pointer to the desired function to call on master READ / slave WRITE.
+ *@brief      onRequest saves the pointer to the desired function to call on host READ / client WRITE.
  *
  *            remember, the specified function is called in an ISR, so keep it short.
  *
@@ -676,11 +679,25 @@ void TwoWire::onReceive(void (*function)(int)) {
  *@return     void
  */
 void TwoWire::onRequest(void (*function)(void)) {
-  vars.user_onRequest = function;
+  if (__builtin_constant_p(function)) {
+    if (__builtin_expect(function != NULL, 1)) {
+      vars.user_onRequest = function;
+    } else {
+      badArg("Null pointer passed to onRequest()");
+    }
+  } else {
+    if (__builtin_expect(function != NULL, 1)) {
+      vars.user_onRequest = function;
+    }
+  }
 }
 
 
-
+#if defined(TWI_ERROR_ENABLED)
+uint8_t TwoWire::returnError() {
+  return vars._errors;
+}
+#endif
 
 
 /**
