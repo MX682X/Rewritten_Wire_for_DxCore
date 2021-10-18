@@ -99,15 +99,15 @@ SOFTWARE.
 #define  TWI_ERR_RXACK         5  // Address or data was NACKed
 #define  TWI_ERR_CLKHLD        6  // Something's holding the clock
 #define  TWI_ERR_UNDEFINED     7  // Software can't tell error source
-  
+
 #if defined(TWI_ERROR_ENABLED)
   #define TWI_ERROR_VAR   twi_error
   #define TWI_INIT_ERROR  uint8_t TWI_ERROR_VAR = TWI_NO_ERR
-  
+
   #define TWI_CHK_ERROR(x) TWI_ERROR_VAR == x
   #define TWI_SET_ERROR(x) TWI_ERROR_VAR = x
   #define TWI_SAVE_ERROR(x) x = TWI_ERROR_VAR
-#else 
+#else
   #define TWI_ERROR_VAR   ;
   #define TWI_INIT_ERROR  ;
 
@@ -136,11 +136,11 @@ struct twiData {
   TWI_t *_module;
 
   struct twiDataBools _bools;      // the structure to hold the bools for the class
-  
+
   #if defined(TWI_ERROR_ENABLED)
     uint8_t _errors;
   #endif
-  
+
   uint8_t _clientAddress;
   #if defined(TWI_MERGE_BUFFERS)
     uint8_t _trHead;

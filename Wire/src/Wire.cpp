@@ -53,8 +53,8 @@ extern "C" {    // compiler was complaining when I put twi.h into the upper C in
  */
 TwoWire::TwoWire(TWI_t *twi_module) {
   vars._module = twi_module;
-  //vars.user_onRequest = NULL;  // Make sure to initialize this pointers
-  //vars.user_onReceive = NULL;  // This avoids weird jumps should something unexpected happen
+  // vars.user_onRequest = NULL;  // Make sure to initialize this pointers
+  // vars.user_onReceive = NULL;  // This avoids weird jumps should something unexpected happen
 }
 
 // Public Methods // /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// /// ///
@@ -601,7 +601,7 @@ uint8_t TwoWire::getIncomingAddress(void) {
 void TwoWire::enableDualMode(bool fmp_enable) {
   #if defined(TWI_DUALCTRL)
     vars._module->DUALCTRL = ((fmp_enable << TWI_FMPEN_bp) | TWI_ENABLE_bm);
-  #else 
+  #else
     badCall("enableDualMode was called, but device does not support it");
     (void) fmp_enable;    // Disable unused variable warning
   #endif
@@ -656,13 +656,13 @@ void TwoWire::onSlaveIRQ(TWI_t *module) {          // This function is static an
  */
 void TwoWire::onReceive(void (*function)(int)) {
   if (__builtin_constant_p(function)) {
-    if (__builtin_expect (function != NULL, 1)) {
+    if (__builtin_expect(function != NULL, 1)) {
       vars.user_onReceive = function;
     } else {
       badArg("Null pointer passed to onReceive()");
     }
   } else {
-    if (__builtin_expect (function != NULL, 1)) {
+    if (__builtin_expect(function != NULL, 1)) {
       vars.user_onReceive = function;
     }
   }
@@ -680,13 +680,13 @@ void TwoWire::onReceive(void (*function)(int)) {
  */
 void TwoWire::onRequest(void (*function)(void)) {
   if (__builtin_constant_p(function)) {
-    if (__builtin_expect (function != NULL, 1)) {
+    if (__builtin_expect(function != NULL, 1)) {
       vars.user_onRequest = function;
     } else {
       badArg("Null pointer passed to onRequest()");
     }
   } else {
-    if (__builtin_expect (function != NULL, 1)) {
+    if (__builtin_expect(function != NULL, 1)) {
       vars.user_onRequest = function;
     }
   }

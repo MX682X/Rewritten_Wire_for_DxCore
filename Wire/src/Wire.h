@@ -104,7 +104,7 @@ class TwoWire: public Stream {
     uint8_t requestFrom(uint8_t address, size_t  quantity);
     uint8_t requestFrom(int     address, int     quantity, int     sendStop);
     uint8_t requestFrom(int     address, int     quantity);
-    
+
     uint16_t writeRead(uint8_t quantity, uint8_t sendStop);
 
     virtual size_t write(uint8_t);
@@ -133,11 +133,11 @@ class TwoWire: public Stream {
       return      write((uint8_t)     n);
     }
     using Print::write;
-    
+
     #if defined(TWI_ERROR_ENABLED)
       uint8_t returnError();
     #endif
-    
+
     void    TWI_onReceiveService(int numBytes);
     uint8_t TWI_onRequestService(void);
 
