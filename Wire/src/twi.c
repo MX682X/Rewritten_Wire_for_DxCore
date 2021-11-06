@@ -25,18 +25,9 @@ SOFTWARE.
 #include "twi.h"
 #include "twi_pins.h"
 
-
-/*
-  Variable that holds the pointer to the static function "onSlaveIRQ"
-  in the TwoWire class, if the client functionality is used.
-*/
-static void (*TWI_onSlaveISR)(TWI_t *module) __attribute__((unused));
-
 // "Private" function declaration
 void NotifyUser_onRequest(struct twiData *_data);
 void NotifyUser_onReceive(struct twiData *_data);
-
-void TWI_SlaveInterruptHandler(TWI_t *module);
 
 void SlaveIRQ_AddrRead(struct twiData *_data);
 void SlaveIRQ_AddrWrite(struct twiData *_data);
@@ -60,12 +51,12 @@ void SlaveIRQ_DataWrite(struct twiData *_data);
  */
 void TWI_MasterInit(struct twiData *_data) {
   #if defined(TWI_MANDS)                            // Check if the user wants to use Master AND Slave
-    if (_data->_bools._hostEnabled == 1) {        // Slave is allowed to be enabled, don't re-enable the host though
+    if (_data->_bools._hostEnabled == 1) {          // Slave is allowed to be enabled, don't re-enable the host though
       return;
     }
   #else                                             // Master OR Slave
-    if (_data->_bools._hostEnabled == 1 ||        // If Master was enabled
-        _data->_bools._clientEnabled  == 1) {        // or Slave was enabled
+    if (_data->_bools._hostEnabled == 1 ||          // If Master was enabled
+        _data->_bools._clientEnabled  == 1) {       // or Slave was enabled
       return;                                       // return and do nothing
     }
   #endif
@@ -526,60 +517,6 @@ uint8_t TWI_MasterRead(struct twiData *_data, uint8_t bytesToRead, bool send_sto
   return dataRead;
 }
 
-
-
-
-/**
- *@brief      TWI_RegisterSlaveISRcallback is used to save the callback to the onSlaveIRQ() function
- *
- *            Since this file has no idea of Wire and Wire1 objects, we need to tell the address of a
- *            static function that has an idea about that objects. This is done here.
- *            Might issue a badArg when optimization is disabled or someone messed up the client begin
- *            in the Wire.cpp file. Used internally only!!
- *
- *
- *@param      void (*function)(TWI_t *module)
- *              (*function)     - the name of the function that returns void
- *              (TWI_t *module) - and accepts the pointer to a TWI module as a parameter
- *
- *@return     void
- */
-void TWI_RegisterSlaveISRcallback(void (*function)(TWI_t *module)) {
-  if (__builtin_constant_p(function)) {     // this if condition is always false? Even when passing NULL it didn't hit badArg
-    if (__builtin_expect(function != NULL, 1)) {
-      TWI_onSlaveISR = function;
-    } else {
-      badArg("Null pointer passed as ISR callback");
-    }
-  } else {
-    if (__builtin_expect(function != NULL, 1)) {
-      TWI_onSlaveISR = function;
-    }
-  }
-}
-
-
-/**
- *@brief      TWI_SlaveInterruptHandler is called from the TWI client interrupt vectors
- *
- *            TWI_onSlaveISR is a static pointer variable. It is set by TWI_RegisterSlaveISRcallback()
- *            which is called from Wire.begin() (client). It should be pointing to the static function 
- *            onSlaveIRQ() in the Wire class. onSlaveIRQ() calls the TWI_HandleSlaveIRQ() with the 
- *            corresponding variable structure.
- *            In other words, the IRQ passes the Module to this function, onSlaveIRQ assigns the struct,
- *            and 
- *            
- *
- *@param      TWI_t *module - the pointer to the TWI module
- *
- *
- *@return     void
- */
-void TWI_SlaveInterruptHandler(TWI_t *module) {
-    if (NULL != TWI_onSlaveISR) TWI_onSlaveISR(module);
-}
-
-
 /**
  *@brief      TWI_HandleSlaveIRQ checks the status register and decides the next action based on that
  *
@@ -949,19 +886,4 @@ uint8_t TWI_advancePosition(uint8_t pos) {
 }
 
 
-/**
- *@brief      TWI0 Slave Interrupt vector
- */
-ISR(TWI0_TWIS_vect) {
-  TWI_SlaveInterruptHandler(&TWI0);
-}
 
-
-/**
- *@brief      TWI1 Slave Interrupt vector
- */
-#if defined(TWI1)
-  ISR(TWI1_TWIS_vect) {
-    TWI_SlaveInterruptHandler(&TWI1);
-  }
-#endif

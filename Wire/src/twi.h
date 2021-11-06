@@ -108,12 +108,12 @@ SOFTWARE.
   #define TWI_SET_ERROR(x) TWI_ERROR_VAR = x
   #define TWI_SAVE_ERROR(x) x = TWI_ERROR_VAR
 #else
-  #define TWI_ERROR_VAR   ;
-  #define TWI_INIT_ERROR  ;
+  #define TWI_ERROR_VAR     {}
+  #define TWI_INIT_ERROR    {}
 
-  #define TWI_CHK_ERROR(x) (true)
-  #define TWI_SET_ERROR(x) ;
-  #define TWI_SAVE_ERROR(x) ;
+  #define TWI_CHK_ERROR(x)  (true)
+  #define TWI_SET_ERROR(x)  {}
+  #define TWI_SAVE_ERROR(x) {}
 #endif
 
 
@@ -201,6 +201,5 @@ uint8_t  TWI_MasterRead(struct        twiData *_data, uint8_t bytesToRead, bool 
 void     TWI_HandleSlaveIRQ(struct twiData *_data);
 
 // uint8_t  TWI_MasterCalcBaud(uint32_t frequency);  // moved to twi_pins.h due to license incompatibilities
-void     TWI_RegisterSlaveISRcallback(void (*function)(TWI_t *module));
 
 #endif

@@ -190,7 +190,6 @@ void TwoWire::begin(uint8_t address, bool receive_broadcast, uint8_t second_addr
     return;
   }
   TWI_SlaveInit(&vars, address, receive_broadcast, second_address);
-  TWI_RegisterSlaveISRcallback(onSlaveIRQ);                        // give the C part of the program a pointer to call back to.
 }
 
 
@@ -697,6 +696,24 @@ void TwoWire::onRequest(void (*function)(void)) {
 uint8_t TwoWire::returnError() {
   return vars._errors;
 }
+#endif
+
+
+/**
+ *@brief      TWI0 Slave Interrupt vector
+ */
+ISR(TWI0_TWIS_vect) {
+  TwoWire::onSlaveIRQ(&TWI0);
+}
+
+
+/**
+ *@brief      TWI1 Slave Interrupt vector
+ */
+#if defined(TWI1)
+  ISR(TWI1_TWIS_vect) {
+    TwoWire::onSlaveIRQ(&TWI1);
+  }
 #endif
 
 
