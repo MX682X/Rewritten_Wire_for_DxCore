@@ -15,11 +15,9 @@ void setup() {
   Wire.begin(0x54);                 // join i2c bus with address 0x54
   Wire.onReceive(receiveDataWire);  // give the Wire library the name of the function
                                     // that will be called on a master write event
-  Serial1.begin(9600);
 }
 
 void loop() {
-  delay(100);
 }
 
 // function that executes whenever data is received from master
